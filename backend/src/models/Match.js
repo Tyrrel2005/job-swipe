@@ -1,0 +1,29 @@
+const mongoose = require('mongoose');
+
+const matchSchema = new mongoose.Schema(
+  {
+    candidateId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+      required: true,
+    },
+    recruiterId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+      required: true,
+    },
+    jobOfferId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'JobOffer',
+      required: true,
+    },
+    status: {
+      type: String,
+      enum: ['pending', 'accepted', 'rejected'],
+      default: 'pending',
+    },
+  },
+  { timestamps: true }
+);
+
+module.exports = mongoose.model('Match', matchSchema);
