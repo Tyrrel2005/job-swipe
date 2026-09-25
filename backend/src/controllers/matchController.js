@@ -2,6 +2,7 @@ const mongoose = require('mongoose');
 const fs = require('fs');
 const { Conversation, JobOffer, Match } = require('../models');
 const { getCvPath } = require('../utils/cvStorage');
+const { createNotification } = require('../services/notificationService');
 
 function isValidId(id) {
   return mongoose.Types.ObjectId.isValid(id);
@@ -36,6 +37,16 @@ async function createMatch(request, response) {
       candidateId: request.user._id,
       recruiterId: jobOffer.recruiterId,
       jobOfferId: jobOffer._id,
+    });
+
+    await createNotification({
+      recipientId: jobOffer.recruiterId,
+      actorId: request.user._id,
+      type: 'new_match',
+      title: 'Nouvelle candidature',
+      message: 'Un candidat a manifesté son intérêt pour votre offre.',
+      data: { matchId: match._id, jobOfferId: jobOffer._id },
+      io: request.app.get('io'),
     });
 
     return response.status(201).json({
@@ -182,6 +193,18 @@ async function updateMatchStatus(request, response) {
         { new: true, upsert: true, setDefaultsOnInsert: true }
       );
     }
+
+    await createNotification({
+      recipientId: match.candidateId,
+      actorId: request.user._id,
+      type: status === 'accepted' ? 'match_accepted' : 'match_rejected',
+      title: status === 'accepted' ? 'Candidature acceptée' : 'Candidature refusée',
+      message: status === 'accepted'
+        ? 'Le recruteur a accepté votre candidature.'
+        : 'Le recruteur a refusé votre candidature.',
+      data: { matchId: match._id, status },
+      io: request.app.get('io'),
+    });
 
     return response.status(200).json({
       message: status === 'accepted' ? 'Candidature acceptée.' : 'Candidature refusée.',

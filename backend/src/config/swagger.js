@@ -124,6 +124,19 @@ const options = {
             readBy: { type: 'array', items: { type: 'string' } },
           },
         },
+        Notification: {
+          type: 'object',
+          properties: {
+            _id: { type: 'string' },
+            recipientId: { type: 'string' },
+            actorId: { type: 'string' },
+            type: { type: 'string', enum: ['new_match', 'match_accepted', 'match_rejected', 'new_message'] },
+            title: { type: 'string' },
+            message: { type: 'string' },
+            data: { type: 'object' },
+            readAt: { type: 'string', format: 'date-time', nullable: true },
+          },
+        },
         Error: {
           type: 'object',
           properties: {
@@ -216,6 +229,15 @@ swaggerSpec.paths = {
   },
   '/api/conversations/{id}/read': {
     patch: { summary: 'Marquer une conversation comme lue', security: [{ bearerAuth: [] }], parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string' } }], responses: { 200: { description: 'Messages marques comme lus.' }, 404: { description: 'Conversation inaccessible.' } } },
+  },
+  '/api/notifications': {
+    get: { summary: 'Lister ses notifications', security: [{ bearerAuth: [] }], parameters: [{ name: 'unreadOnly', in: 'query', schema: { type: 'boolean' } }, { name: 'limit', in: 'query', schema: { type: 'integer' } }], responses: { 200: { description: 'Notifications du compte.' } } },
+  },
+  '/api/notifications/read-all': {
+    patch: { summary: 'Marquer toutes les notifications comme lues', security: [{ bearerAuth: [] }], responses: { 200: { description: 'Notifications marquees comme lues.' } } },
+  },
+  '/api/notifications/{id}/read': {
+    patch: { summary: 'Marquer une notification comme lue', security: [{ bearerAuth: [] }], parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string' } }], responses: { 200: { description: 'Notification marquee comme lue.' }, 404: { description: 'Notification introuvable.' } } },
   },
 };
 

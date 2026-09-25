@@ -13,6 +13,7 @@ const {
   JobOffer,
   Match,
   Message,
+  Notification,
   User,
 } = require('../src/models');
 
@@ -105,6 +106,7 @@ test.beforeEach(async () => {
     Match.deleteMany({}),
     Conversation.deleteMany({}),
     Message.deleteMany({}),
+    Notification.deleteMany({}),
   ]);
 });
 
@@ -139,6 +141,13 @@ test('candidate likes an offer and recruiter reviews profile before accepting', 
   assert.equal(matchResponse.statusCode, 201);
   assert.equal(matchResponse.body.match.status, 'pending');
 
+  const recruiterNotifications = await request(app)
+    .get('/api/notifications?unreadOnly=true')
+    .set('Authorization', `Bearer ${recruiterToken}`);
+
+  assert.equal(recruiterNotifications.statusCode, 200);
+  assert.equal(recruiterNotifications.body.notifications[0].type, 'new_match');
+
   const matchId = matchResponse.body.match._id;
   const profileResponse = await request(app)
     .get(`/api/matches/${matchId}/candidate-profile`)
@@ -155,6 +164,19 @@ test('candidate likes an offer and recruiter reviews profile before accepting', 
 
   assert.equal(acceptResponse.statusCode, 200);
   assert.ok(acceptResponse.body.conversation._id);
+
+  const candidateNotifications = await request(app)
+    .get('/api/notifications?unreadOnly=true')
+    .set('Authorization', `Bearer ${candidateToken}`);
+
+  assert.equal(candidateNotifications.statusCode, 200);
+  assert.equal(candidateNotifications.body.notifications[0].type, 'match_accepted');
+
+  const readNotificationResponse = await request(app)
+    .patch(`/api/notifications/${candidateNotifications.body.notifications[0]._id}/read`)
+    .set('Authorization', `Bearer ${candidateToken}`);
+
+  assert.equal(readNotificationResponse.statusCode, 200);
 });
 
 test('participants can exchange messages through HTTP', async () => {
@@ -166,6 +188,13 @@ test('participants can exchange messages through HTTP', async () => {
     .send({ content: 'Bonjour, votre offre m interesse.' });
 
   assert.equal(sendResponse.statusCode, 201);
+
+  const recruiterNotifications = await request(app)
+    .get('/api/notifications?unreadOnly=true')
+    .set('Authorization', `Bearer ${recruiterToken}`);
+
+  assert.equal(recruiterNotifications.statusCode, 200);
+  assert.ok(recruiterNotifications.body.notifications.some((notification) => notification.type === 'new_message'));
 
   const messagesResponse = await request(app)
     .get(`/api/conversations/${conversationId}/messages`)
@@ -254,14 +283,24 @@ test('Socket.IO authenticates participants, broadcasts messages and read state',
       });
     });
 
+    const notificationPromise = new Promise((resolve, reject) => {
+      const timeout = setTimeout(() => reject(new Error('notification:new non recu')), 3000);
+      recruiterSocket.once('notification:new', (notification) => {
+        clearTimeout(timeout);
+        resolve(notification);
+      });
+    });
+
     candidateSocket.emit('message:send', {
       conversationId,
       content: 'Message temps reel',
     });
 
     const message = await messagePromise;
+    const notification = await notificationPromise;
     assert.equal(message.content, 'Message temps reel');
     assert.equal(message.senderRole, 'candidate');
+    assert.equal(notification.type, 'new_message');
 
     const readPromise = new Promise((resolve, reject) => {
       const timeout = setTimeout(() => reject(new Error('message:read non recu')), 3000);

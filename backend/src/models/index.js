@@ -3,6 +3,7 @@ const JobOffer = require('./JobOffer');
 const Match = require('./Match');
 const Conversation = require('./Conversation');
 const Message = require('./Message');
+const Notification = require('./Notification');
 
 module.exports = {
   User,
@@ -10,4 +11,5 @@ module.exports = {
   Match,
   Conversation,
   Message,
+  Notification,
 };

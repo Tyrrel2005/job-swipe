@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 const { Conversation, Match, Message } = require('../models');
+const { createNotification } = require('../services/notificationService');
 
 function isValidId(id) {
   return mongoose.Types.ObjectId.isValid(id);
@@ -147,6 +148,20 @@ async function sendMessage(request, response) {
 
     conversation.lastMessageAt = message.createdAt;
     await conversation.save();
+
+    const recipientId = conversation.participantIds.find(
+      (participantId) => participantId.toString() !== request.user._id.toString()
+    );
+
+    await createNotification({
+      recipientId,
+      actorId: request.user._id,
+      type: 'new_message',
+      title: 'Nouveau message',
+      message: 'Vous avez reçu un nouveau message.',
+      data: { conversationId: conversation._id, messageId: message._id },
+      io: request.app.get('io'),
+    });
 
     return response.status(201).json({
       message: 'Message envoyé avec succès.',

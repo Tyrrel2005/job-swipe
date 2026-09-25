@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 const { Conversation, Message, User } = require('../models');
+const { createNotification } = require('../services/notificationService');
 const { verifyToken } = require('../utils/token');
 
 function isValidId(id) {
@@ -57,6 +58,7 @@ function registerSocketHandlers(io) {
   });
 
   io.on('connection', (socket) => {
+    socket.join(`user:${socket.user._id}`);
     socket.emit('socket:ready', { userId: socket.user._id });
 
     socket.on('conversation:join', async (payload, callback) => {
@@ -146,6 +148,20 @@ function registerSocketHandlers(io) {
         conversation.lastMessageAt = message.createdAt;
         await conversation.save();
         await message.populate('senderId', 'email role');
+
+        const recipientId = conversation.participantIds.find(
+          (participantId) => participantId.toString() !== socket.user._id.toString()
+        );
+
+        await createNotification({
+          recipientId,
+          actorId: socket.user._id,
+          type: 'new_message',
+          title: 'Nouveau message',
+          message: 'Vous avez reçu un nouveau message.',
+          data: { conversationId: conversation._id, messageId: message._id },
+          io,
+        });
 
         const room = `conversation:${conversation._id}`;
         io.to(room).emit('message:new', message);
