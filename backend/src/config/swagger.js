@@ -36,6 +36,7 @@ const options = {
             experience: { type: 'string', example: '3 ans' },
             availability: { type: 'string', enum: ['immediate', 'within1Month', 'within3Months'] },
             workMode: { type: 'string', enum: ['onsite', 'hybrid', 'remote'] },
+            desiredContractTypes: { type: 'array', items: { type: 'string', enum: ['CDI', 'CDD', 'Alternance', 'Stage', 'Freelance', 'Temps partiel'] } },
             salaryMin: { type: 'number', example: 40000 },
             salaryMax: { type: 'number', example: 50000 },
             bio: { type: 'string' },
@@ -57,6 +58,7 @@ const options = {
             companyCity: { type: 'string', example: 'Paris' },
             recruiterName: { type: 'string', example: 'Sophie Bernard' },
             recruiterPosition: { type: 'string', example: 'Responsable recrutement' },
+            responseTime: { type: 'string', enum: ['under1Hour', 'within24Hours', 'within48Hours'] },
           },
         },
         User: {
@@ -67,6 +69,7 @@ const options = {
             role: { type: 'string', enum: ['candidate', 'recruiter'] },
             status: { type: 'string', enum: ['active', 'pending', 'disabled'] },
             emailVerified: { type: 'boolean', example: false },
+            profileCompletion: { type: 'integer', minimum: 0, maximum: 100, example: 75 },
             profile: {
               oneOf: [
                 { $ref: '#/components/schemas/CandidateProfile' },

@@ -7,6 +7,7 @@ const profileFields = {
     'experience',
     'availability',
     'workMode',
+    'desiredContractTypes',
     'salaryMin',
     'salaryMax',
     'bio',
@@ -24,6 +25,7 @@ const profileFields = {
     'companyCity',
     'recruiterName',
     'recruiterPosition',
+    'responseTime',
   ],
 };
 

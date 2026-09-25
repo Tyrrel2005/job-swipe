@@ -1,6 +1,7 @@
 const fs = require('fs');
 
 const { getCvPath, getCvUrl } = require('../utils/cvStorage');
+const { calculateCompletion } = require('../utils/profileCompletion');
 const { profileFields } = require('../utils/profileFields');
 
 function serializeProfileUser(user) {
@@ -11,6 +12,10 @@ function serializeProfileUser(user) {
     status: user.status,
     emailVerified: user.emailVerified,
     profile: user.role === 'candidate' ? user.candidateProfile || null : user.recruiterProfile || null,
+    profileCompletion: calculateCompletion(
+      user.role === 'candidate' ? user.candidateProfile : user.recruiterProfile,
+      user.role
+    ),
   };
 }
 
@@ -44,6 +49,19 @@ async function updateProfile(request, response) {
     }
 
     const profileData = extractProfileData(request.user.role, request.body);
+
+    for (const field of ['skills', 'languages', 'desiredContractTypes']) {
+      if (Object.prototype.hasOwnProperty.call(profileData, field) && !Array.isArray(profileData[field])) {
+        return response.status(400).json({ message: `${field} doit être un tableau.` });
+      }
+    }
+
+    if (request.user.role === 'candidate'
+      && Object.prototype.hasOwnProperty.call(profileData, 'skills')
+      && profileData.skills.length < 3) {
+      return response.status(400).json({ message: 'Le profil candidat doit contenir au moins 3 compétences.' });
+    }
+
     const profileField = request.user.role === 'candidate' ? 'candidateProfile' : 'recruiterProfile';
     const currentProfile = request.user[profileField] ? request.user[profileField].toObject() : {};
 

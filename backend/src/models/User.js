@@ -23,6 +23,10 @@ const candidateProfileSchema = new mongoose.Schema(
       type: String,
       enum: ['onsite', 'hybrid', 'remote'],
     },
+    desiredContractTypes: [{
+      type: String,
+      enum: ['CDI', 'CDD', 'Alternance', 'Stage', 'Freelance', 'Temps partiel'],
+    }],
     salaryMin: { type: Number, default: 0 },
     salaryMax: { type: Number, default: 0 },
     bio: { type: String, default: '' },
@@ -45,6 +49,10 @@ const recruiterProfileSchema = new mongoose.Schema(
     companyCity: { type: String, trim: true },
     recruiterName: { type: String, trim: true },
     recruiterPosition: { type: String, trim: true },
+    responseTime: {
+      type: String,
+      enum: ['under1Hour', 'within24Hours', 'within48Hours'],
+    },
   },
   { _id: false }
 );

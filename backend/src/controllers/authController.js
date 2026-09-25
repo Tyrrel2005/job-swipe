@@ -1,5 +1,6 @@
 const bcrypt = require('bcryptjs');
 const { User } = require('../models');
+const { calculateCompletion } = require('../utils/profileCompletion');
 const { generateToken } = require('../utils/token');
 
 function serializeUser(user) {
@@ -11,6 +12,10 @@ function serializeUser(user) {
     emailVerified: user.emailVerified,
     candidateProfile: user.candidateProfile || null,
     recruiterProfile: user.recruiterProfile || null,
+    profileCompletion: calculateCompletion(
+      user.role === 'candidate' ? user.candidateProfile : user.recruiterProfile,
+      user.role
+    ),
   };
 }
 
@@ -52,6 +57,9 @@ async function register(request, response) {
         experience: request.body.experience || '',
         availability: request.body.availability || 'immediate',
         workMode: request.body.workMode || 'hybrid',
+        desiredContractTypes: Array.isArray(request.body.desiredContractTypes)
+          ? request.body.desiredContractTypes
+          : [],
         salaryMin: Number(request.body.salaryMin || 0),
         salaryMax: Number(request.body.salaryMax || 0),
         bio: request.body.bio || '',
@@ -61,7 +69,7 @@ async function register(request, response) {
         diploma: request.body.diploma || '',
         school: request.body.school || '',
         graduationYear: request.body.graduationYear || null,
-        cvUrl: request.body.cvUrl || '',
+        cvUrl: '',
       };
     }
 
@@ -73,6 +81,7 @@ async function register(request, response) {
         companyCity: request.body.companyCity || '',
         recruiterName: request.body.recruiterName || '',
         recruiterPosition: request.body.recruiterPosition || '',
+        responseTime: request.body.responseTime || 'within48Hours',
       };
     }
 
