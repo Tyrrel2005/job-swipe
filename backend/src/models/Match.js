@@ -26,4 +26,6 @@ const matchSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+matchSchema.index({ candidateId: 1, jobOfferId: 1 }, { unique: true });
+
 module.exports = mongoose.model('Match', matchSchema);
