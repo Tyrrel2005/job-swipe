@@ -13,6 +13,7 @@ const profileFields = {
     'bio',
     'skills',
     'languages',
+    'educations',
     'degree',
     'diploma',
     'school',

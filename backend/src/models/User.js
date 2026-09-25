@@ -8,6 +8,16 @@ const languageSchema = new mongoose.Schema(
   { _id: false }
 );
 
+const educationSchema = new mongoose.Schema(
+  {
+    degree: { type: String, trim: true },
+    diploma: { type: String, trim: true },
+    school: { type: String, trim: true },
+    graduationYear: { type: Number, min: 1900, max: 2200 },
+  },
+  { _id: false }
+);
+
 const candidateProfileSchema = new mongoose.Schema(
   {
     firstName: { type: String, trim: true },
@@ -32,11 +42,14 @@ const candidateProfileSchema = new mongoose.Schema(
     bio: { type: String, default: '' },
     skills: [{ type: String }],
     languages: [languageSchema],
+    educations: [educationSchema],
     degree: { type: String, default: '' },
     diploma: { type: String, default: '' },
     school: { type: String, default: '' },
     graduationYear: { type: Number, default: null },
     cvUrl: { type: String, default: '' },
+    profilePhotoUrl: { type: String, default: '' },
+    profilePhotoMimeType: { type: String, default: '' },
   },
   { _id: false }
 );
@@ -53,6 +66,8 @@ const recruiterProfileSchema = new mongoose.Schema(
       type: String,
       enum: ['under1Hour', 'within24Hours', 'within48Hours'],
     },
+    companyLogoUrl: { type: String, default: '' },
+    companyLogoMimeType: { type: String, default: '' },
   },
   { _id: false }
 );

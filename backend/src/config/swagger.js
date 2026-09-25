@@ -26,6 +26,15 @@ const options = {
             level: { type: 'string', example: 'Courant' },
           },
         },
+        Education: {
+          type: 'object',
+          properties: {
+            degree: { type: 'string' },
+            diploma: { type: 'string' },
+            school: { type: 'string' },
+            graduationYear: { type: 'integer', example: 2024 },
+          },
+        },
         CandidateProfile: {
           type: 'object',
           properties: {
@@ -42,11 +51,13 @@ const options = {
             bio: { type: 'string' },
             skills: { type: 'array', items: { type: 'string' } },
             languages: { type: 'array', items: { $ref: '#/components/schemas/Language' } },
+            educations: { type: 'array', items: { $ref: '#/components/schemas/Education' } },
             degree: { type: 'string', example: 'Master' },
             diploma: { type: 'string', example: 'Informatique' },
             school: { type: 'string', example: 'Universite de Paris' },
             graduationYear: { type: 'integer', example: 2022 },
             cvUrl: { type: 'string', example: '/api/profile/cv' },
+            profilePhotoUrl: { type: 'string', example: '/api/profile/photo' },
           },
         },
         RecruiterProfile: {
@@ -59,6 +70,7 @@ const options = {
             recruiterName: { type: 'string', example: 'Sophie Bernard' },
             recruiterPosition: { type: 'string', example: 'Responsable recrutement' },
             responseTime: { type: 'string', enum: ['under1Hour', 'within24Hours', 'within48Hours'] },
+            companyLogoUrl: { type: 'string', example: '/api/profile/company-logo' },
           },
         },
         User: {
@@ -95,6 +107,7 @@ const options = {
             requiredLanguages: { type: 'array', items: { $ref: '#/components/schemas/Language' } },
             description: { type: 'string' },
             status: { type: 'string', enum: ['published', 'closed'] },
+            compatibilityScore: { type: 'integer', minimum: 0, maximum: 100, example: 94 },
           },
         },
         Match: {
@@ -105,6 +118,7 @@ const options = {
             recruiterId: { type: 'string' },
             jobOfferId: { type: 'string' },
             status: { type: 'string', enum: ['pending', 'accepted', 'rejected'] },
+            compatibilityScore: { type: 'integer', minimum: 0, maximum: 100, example: 94 },
           },
         },
         Conversation: {
@@ -194,6 +208,16 @@ swaggerSpec.paths = {
     get: { summary: 'Telecharger son CV', security: [{ bearerAuth: [] }], responses: { 200: { description: 'Fichier PDF.', content: { 'application/pdf': { schema: { type: 'string', format: 'binary' } } } }, 404: { description: 'CV introuvable.' } } },
     delete: { summary: 'Supprimer son CV', security: [{ bearerAuth: [] }], responses: { 204: { description: 'CV supprime.' } } },
   },
+  '/api/profile/photo': {
+    post: { summary: 'Importer une photo candidat', security: [{ bearerAuth: [] }], requestBody: { required: true, content: { 'multipart/form-data': { schema: { type: 'object', required: ['photo'], properties: { photo: { type: 'string', format: 'binary' } } } } } }, responses: { 201: { description: 'Photo enregistree.' } } },
+    get: { summary: 'Telecharger sa photo candidat', security: [{ bearerAuth: [] }], responses: { 200: { description: 'Image du profil.' }, 404: { description: 'Photo introuvable.' } } },
+    delete: { summary: 'Supprimer sa photo candidat', security: [{ bearerAuth: [] }], responses: { 204: { description: 'Photo supprimee.' } } },
+  },
+  '/api/profile/company-logo': {
+    post: { summary: "Importer le logo d'entreprise", security: [{ bearerAuth: [] }], requestBody: { required: true, content: { 'multipart/form-data': { schema: { type: 'object', required: ['logo'], properties: { logo: { type: 'string', format: 'binary' } } } } } }, responses: { 201: { description: 'Logo enregistre.' } } },
+    get: { summary: "Telecharger son logo d'entreprise", security: [{ bearerAuth: [] }], responses: { 200: { description: 'Logo entreprise.' }, 404: { description: 'Logo introuvable.' } } },
+    delete: { summary: "Supprimer son logo d'entreprise", security: [{ bearerAuth: [] }], responses: { 204: { description: 'Logo supprime.' } } },
+  },
   '/api/jobs': {
     get: { summary: 'Lister les offres', security: [{ bearerAuth: [] }], parameters: [{ name: 'city', in: 'query', schema: { type: 'string' } }, { name: 'contractType', in: 'query', schema: { type: 'string' } }, { name: 'remoteMode', in: 'query', schema: { type: 'string' } }, { name: 'page', in: 'query', schema: { type: 'integer' } }, { name: 'limit', in: 'query', schema: { type: 'integer' } }], responses: { 200: { description: 'Liste paginee des offres.' } } },
     post: { summary: 'Creer une offre', security: [{ bearerAuth: [] }], requestBody: { required: true, content: { 'application/json': { schema: { $ref: '#/components/schemas/JobOffer' } } } }, responses: { 201: { description: 'Offre creee.' }, 403: { description: 'Role recruteur requis.' } } },
@@ -203,6 +227,9 @@ swaggerSpec.paths = {
     get: { summary: 'Consulter une offre', security: [{ bearerAuth: [] }], responses: { 200: { description: 'Offre demandee.' }, 404: { description: 'Offre introuvable.' } } },
     patch: { summary: 'Modifier une offre', security: [{ bearerAuth: [] }], requestBody: { content: { 'application/json': { schema: { $ref: '#/components/schemas/JobOffer' } } } }, responses: { 200: { description: 'Offre mise a jour.' }, 404: { description: 'Offre introuvable.' } } },
     delete: { summary: 'Supprimer une offre', security: [{ bearerAuth: [] }], responses: { 204: { description: 'Offre supprimee.' } } },
+  },
+  '/api/jobs/{id}/company-logo': {
+    get: { summary: "Consulter le logo de l'entreprise liee a une offre publiee", security: [{ bearerAuth: [] }], parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string' } }], responses: { 200: { description: 'Logo entreprise.' }, 404: { description: 'Logo introuvable.' } } },
   },
   '/api/matches': {
     get: { summary: 'Lister ses matchs', security: [{ bearerAuth: [] }], responses: { 200: { description: 'Liste des matchs.' } } },
@@ -215,6 +242,9 @@ swaggerSpec.paths = {
   },
   '/api/matches/{id}/candidate-cv': {
     get: { summary: 'Telecharger le CV candidat lie a un match', security: [{ bearerAuth: [] }], parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string' } }], responses: { 200: { description: 'CV PDF.', content: { 'application/pdf': { schema: { type: 'string', format: 'binary' } } } }, 404: { description: 'CV introuvable.' } } },
+  },
+  '/api/matches/{id}/candidate-photo': {
+    get: { summary: 'Telecharger la photo du candidat lie au match', security: [{ bearerAuth: [] }], parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string' } }], responses: { 200: { description: 'Photo candidat.' }, 404: { description: 'Photo introuvable.' } } },
   },
   '/api/matches/{id}/status': {
     patch: { summary: 'Accepter ou refuser une candidature', security: [{ bearerAuth: [] }], parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string' } }], requestBody: { required: true, content: { 'application/json': { schema: { type: 'object', required: ['status'], properties: { status: { type: 'string', enum: ['accepted', 'rejected'] } } } } } }, responses: { 200: { description: 'Statut mis a jour.' }, 403: { description: 'Recruteur requis.' } } },

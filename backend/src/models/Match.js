@@ -22,6 +22,7 @@ const matchSchema = new mongoose.Schema(
       enum: ['pending', 'accepted', 'rejected'],
       default: 'pending',
     },
+    compatibilityScore: { type: Number, min: 0, max: 100, default: 0 },
   },
   { timestamps: true }
 );

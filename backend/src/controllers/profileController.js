@@ -1,6 +1,7 @@
 const fs = require('fs');
 
 const { getCvPath, getCvUrl } = require('../utils/cvStorage');
+const { getCompanyLogoPath, getProfilePhotoPath } = require('../utils/mediaStorage');
 const { calculateCompletion } = require('../utils/profileCompletion');
 const { profileFields } = require('../utils/profileFields');
 
@@ -50,7 +51,7 @@ async function updateProfile(request, response) {
 
     const profileData = extractProfileData(request.user.role, request.body);
 
-    for (const field of ['skills', 'languages', 'desiredContractTypes']) {
+    for (const field of ['skills', 'languages', 'desiredContractTypes', 'educations']) {
       if (Object.prototype.hasOwnProperty.call(profileData, field) && !Array.isArray(profileData[field])) {
         return response.status(400).json({ message: `${field} doit être un tableau.` });
       }
@@ -162,4 +163,96 @@ async function deleteCv(request, response) {
   }
 }
 
-module.exports = { getProfile, updateProfile, uploadCv, getCv, deleteCv };
+async function uploadProfilePhoto(request, response) {
+  try {
+    if (!request.file) {
+      return response.status(400).json({ message: 'La photo est requise dans le champ photo.' });
+    }
+
+    fs.writeFileSync(getProfilePhotoPath(request.user._id), request.file.buffer);
+    const currentProfile = request.user.candidateProfile?.toObject() || {};
+    request.user.candidateProfile = {
+      ...currentProfile,
+      profilePhotoUrl: '/api/profile/photo',
+      profilePhotoMimeType: request.file.mimetype,
+    };
+    await request.user.save();
+
+    return response.status(201).json({ message: 'Photo de profil enregistrée.', photoUrl: '/api/profile/photo' });
+  } catch (error) {
+    return response.status(500).json({ message: "Erreur lors de l'enregistrement de la photo.", error: error.message });
+  }
+}
+
+async function getProfilePhoto(request, response) {
+  const profile = request.user.candidateProfile;
+  const photoPath = getProfilePhotoPath(request.user._id);
+
+  if (!profile?.profilePhotoUrl || !fs.existsSync(photoPath)) {
+    return response.status(404).json({ message: 'Photo de profil introuvable.' });
+  }
+
+  return response.sendFile(photoPath, { headers: { 'Content-Type': profile.profilePhotoMimeType || 'image/jpeg' } });
+}
+
+async function deleteProfilePhoto(request, response) {
+  fs.rmSync(getProfilePhotoPath(request.user._id), { force: true });
+  const currentProfile = request.user.candidateProfile?.toObject() || {};
+  request.user.candidateProfile = { ...currentProfile, profilePhotoUrl: '', profilePhotoMimeType: '' };
+  await request.user.save();
+  return response.status(204).send();
+}
+
+async function uploadCompanyLogo(request, response) {
+  try {
+    if (!request.file) {
+      return response.status(400).json({ message: 'Le logo est requis dans le champ logo.' });
+    }
+
+    fs.writeFileSync(getCompanyLogoPath(request.user._id), request.file.buffer);
+    const currentProfile = request.user.recruiterProfile?.toObject() || {};
+    request.user.recruiterProfile = {
+      ...currentProfile,
+      companyLogoUrl: '/api/profile/company-logo',
+      companyLogoMimeType: request.file.mimetype,
+    };
+    await request.user.save();
+
+    return response.status(201).json({ message: "Logo d'entreprise enregistré.", logoUrl: '/api/profile/company-logo' });
+  } catch (error) {
+    return response.status(500).json({ message: "Erreur lors de l'enregistrement du logo.", error: error.message });
+  }
+}
+
+async function getCompanyLogo(request, response) {
+  const profile = request.user.recruiterProfile;
+  const logoPath = getCompanyLogoPath(request.user._id);
+
+  if (!profile?.companyLogoUrl || !fs.existsSync(logoPath)) {
+    return response.status(404).json({ message: "Logo d'entreprise introuvable." });
+  }
+
+  return response.sendFile(logoPath, { headers: { 'Content-Type': profile.companyLogoMimeType || 'image/png' } });
+}
+
+async function deleteCompanyLogo(request, response) {
+  fs.rmSync(getCompanyLogoPath(request.user._id), { force: true });
+  const currentProfile = request.user.recruiterProfile?.toObject() || {};
+  request.user.recruiterProfile = { ...currentProfile, companyLogoUrl: '', companyLogoMimeType: '' };
+  await request.user.save();
+  return response.status(204).send();
+}
+
+module.exports = {
+  deleteCompanyLogo,
+  deleteCv,
+  deleteProfilePhoto,
+  getCompanyLogo,
+  getCv,
+  getProfile,
+  getProfilePhoto,
+  updateProfile,
+  uploadCompanyLogo,
+  uploadCv,
+  uploadProfilePhoto,
+};

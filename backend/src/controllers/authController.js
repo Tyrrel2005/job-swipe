@@ -65,6 +65,7 @@ async function register(request, response) {
         bio: request.body.bio || '',
         skills: Array.isArray(request.body.skills) ? request.body.skills : [],
         languages: Array.isArray(request.body.languages) ? request.body.languages : [],
+        educations: Array.isArray(request.body.educations) ? request.body.educations : [],
         degree: request.body.degree || '',
         diploma: request.body.diploma || '',
         school: request.body.school || '',
@@ -82,6 +83,8 @@ async function register(request, response) {
         recruiterName: request.body.recruiterName || '',
         recruiterPosition: request.body.recruiterPosition || '',
         responseTime: request.body.responseTime || 'within48Hours',
+        companyLogoUrl: '',
+        companyLogoMimeType: '',
       };
     }
 

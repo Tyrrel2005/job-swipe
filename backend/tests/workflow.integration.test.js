@@ -120,6 +120,18 @@ test('recruiter creates an offer and candidate can list it', async () => {
   const candidateToken = await signup('candidate.offer@example.com', 'candidate');
   await createOffer(recruiterToken);
 
+  await request(app)
+    .patch('/api/profile')
+    .set('Authorization', `Bearer ${candidateToken}`)
+    .send({
+      skills: ['Node.js', 'MongoDB', 'JavaScript'],
+      desiredContractTypes: ['CDI'],
+      location: 'Paris',
+      workMode: 'hybrid',
+      experience: '3 à 6 ans',
+      degree: 'Bac +5 (Master / Ingénieur)',
+    });
+
   const response = await request(app)
     .get('/api/jobs')
     .set('Authorization', `Bearer ${candidateToken}`);
@@ -127,6 +139,7 @@ test('recruiter creates an offer and candidate can list it', async () => {
   assert.equal(response.statusCode, 200);
   assert.equal(response.body.jobOffers.length, 1);
   assert.equal(response.body.jobOffers[0].status, 'published');
+  assert.equal(response.body.jobOffers[0].compatibilityScore, 100);
 });
 
 test('candidate likes an offer and recruiter reviews profile before accepting', async () => {
@@ -140,6 +153,8 @@ test('candidate likes an offer and recruiter reviews profile before accepting', 
 
   assert.equal(matchResponse.statusCode, 201);
   assert.equal(matchResponse.body.match.status, 'pending');
+
+  assert.equal(typeof matchResponse.body.match.compatibilityScore, 'number');
 
   const recruiterNotifications = await request(app)
     .get('/api/notifications?unreadOnly=true')

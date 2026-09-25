@@ -1,5 +1,8 @@
+const fs = require('fs');
 const mongoose = require('mongoose');
-const { JobOffer } = require('../models');
+const { JobOffer, User } = require('../models');
+const { getCompanyLogoPath } = require('../utils/mediaStorage');
+const { calculateMatchingScore } = require('../utils/matchingScore');
 
 const writableFields = [
   'title',
@@ -43,6 +46,32 @@ function parsePagination(request) {
 
 function isValidId(id) {
   return mongoose.Types.ObjectId.isValid(id);
+}
+
+async function getCompanyLogoForJob(request, response) {
+  try {
+    if (!isValidId(request.params.id)) {
+      return response.status(400).json({ message: "Identifiant d'offre invalide." });
+    }
+
+    const jobOffer = await JobOffer.findOne({ _id: request.params.id, status: 'published' });
+    if (!jobOffer) {
+      return response.status(404).json({ message: 'Offre introuvable.' });
+    }
+
+    const recruiter = await User.findById(jobOffer.recruiterId).select('recruiterProfile');
+    const logoPath = getCompanyLogoPath(jobOffer.recruiterId);
+
+    if (!recruiter?.recruiterProfile?.companyLogoUrl || !fs.existsSync(logoPath)) {
+      return response.status(404).json({ message: "Logo d'entreprise introuvable." });
+    }
+
+    return response.sendFile(logoPath, {
+      headers: { 'Content-Type': recruiter.recruiterProfile.companyLogoMimeType || 'image/png' },
+    });
+  } catch (error) {
+    return response.status(500).json({ message: "Erreur lors de la récupération du logo d'entreprise.", error: error.message });
+  }
 }
 
 async function createJobOffer(request, response) {
@@ -91,8 +120,21 @@ async function listJobOffers(request, response) {
       JobOffer.countDocuments(filters),
     ]);
 
+    const serializedOffers = jobOffers.map((jobOffer) => {
+      const serializedOffer = jobOffer.toObject();
+
+      if (request.user.role === 'candidate') {
+        serializedOffer.compatibilityScore = calculateMatchingScore(
+          request.user.candidateProfile,
+          jobOffer
+        ).score;
+      }
+
+      return serializedOffer;
+    });
+
     return response.status(200).json({
-      jobOffers,
+      jobOffers: serializedOffers,
       pagination: { page, limit, total, totalPages: Math.ceil(total / limit) },
     });
   } catch (error) {
@@ -122,7 +164,15 @@ async function getJobOffer(request, response) {
       return response.status(404).json({ message: 'Offre introuvable.' });
     }
 
-    return response.status(200).json({ jobOffer });
+    const serializedOffer = jobOffer.toObject();
+    if (request.user.role === 'candidate') {
+      serializedOffer.compatibilityScore = calculateMatchingScore(
+        request.user.candidateProfile,
+        jobOffer
+      ).score;
+    }
+
+    return response.status(200).json({ jobOffer: serializedOffer });
   } catch (error) {
     return response.status(500).json({
       message: "Erreur lors de la récupération de l'offre.",
@@ -195,4 +245,5 @@ module.exports = {
   getJobOffer,
   updateJobOffer,
   deleteJobOffer,
+  getCompanyLogoForJob,
 };

@@ -6,6 +6,7 @@ const {
   getJobOffer,
   updateJobOffer,
   deleteJobOffer,
+  getCompanyLogoForJob,
 } = require('../controllers/jobOfferController');
 const { protect, requireRole } = require('../middlewares/authMiddleware');
 
@@ -14,6 +15,7 @@ const router = express.Router();
 router.use(protect);
 router.get('/', listJobOffers);
 router.get('/:id', getJobOffer);
+router.get('/:id/company-logo', getCompanyLogoForJob);
 router.post('/', requireRole('recruiter'), createJobOffer);
 router.patch('/:id', requireRole('recruiter'), updateJobOffer);
 router.delete('/:id', requireRole('recruiter'), deleteJobOffer);

@@ -11,6 +11,7 @@ const candidateCompletionFields = [
   'salaryMax',
   'skills',
   'languages',
+  'educations',
   'degree',
   'diploma',
   'school',

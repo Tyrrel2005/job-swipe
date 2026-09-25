@@ -57,6 +57,7 @@ test('signup creates a candidate without exposing the password hash', async () =
       firstName: 'Alex',
       skills: ['Node.js'],
       desiredContractTypes: ['CDI'],
+      educations: [{ diploma: 'Master Informatique', school: 'Universite de Paris', graduationYear: 2024 }],
     });
 
   assert.equal(response.statusCode, 201);
@@ -65,6 +66,7 @@ test('signup creates a candidate without exposing the password hash', async () =
   assert.ok(response.body.token);
   assert.equal(response.body.user.passwordHash, undefined);
   assert.deepEqual(response.body.user.candidateProfile.desiredContractTypes, ['CDI']);
+  assert.equal(response.body.user.candidateProfile.educations[0].school, 'Universite de Paris');
 
   const user = await User.findOne({ email: 'candidate.integration@example.com' });
   assert.ok(user.passwordHash);
@@ -102,6 +104,10 @@ test('profile update persists only allowed profile fields', async () => {
       firstName: 'Alexandre',
       location: 'Lyon',
       desiredContractTypes: ['CDI', 'Freelance'],
+      educations: [
+        { diploma: 'Master Informatique', school: 'Universite de Paris', graduationYear: 2024 },
+        { diploma: 'Licence Web', school: 'IUT de Lyon', graduationYear: 2022 },
+      ],
       skills: ['JavaScript', 'MongoDB', 'Node.js'],
     });
 
@@ -109,6 +115,7 @@ test('profile update persists only allowed profile fields', async () => {
   assert.equal(updateResponse.body.user.profile.firstName, 'Alexandre');
   assert.equal(updateResponse.body.user.profile.location, 'Lyon');
   assert.deepEqual(updateResponse.body.user.profile.desiredContractTypes, ['CDI', 'Freelance']);
+  assert.equal(updateResponse.body.user.profile.educations.length, 2);
   assert.ok(updateResponse.body.user.profileCompletion > 0);
 
   const profileResponse = await request(app)
@@ -144,4 +151,48 @@ test('recruiter profile stores response preferences and completion', async () =>
   assert.equal(response.statusCode, 200);
   assert.equal(response.body.user.profile.responseTime, 'within24Hours');
   assert.equal(response.body.user.profileCompletion, 100);
+});
+
+test('candidate photo and recruiter company logo can be managed', async () => {
+  const candidateToken = await createCandidate();
+  const recruiterToken = await createRecruiter();
+  const imageBuffer = Buffer.from('fake-image-content');
+
+  const photoUpload = await request(app)
+    .post('/api/profile/photo')
+    .set('Authorization', `Bearer ${candidateToken}`)
+    .attach('photo', imageBuffer, { filename: 'photo.png', contentType: 'image/png' });
+
+  assert.equal(photoUpload.statusCode, 201);
+
+  const photoResponse = await request(app)
+    .get('/api/profile/photo')
+    .set('Authorization', `Bearer ${candidateToken}`);
+
+  assert.equal(photoResponse.statusCode, 200);
+  assert.equal(photoResponse.headers['content-type'], 'image/png');
+
+  const logoUpload = await request(app)
+    .post('/api/profile/company-logo')
+    .set('Authorization', `Bearer ${recruiterToken}`)
+    .attach('logo', Buffer.from('<svg></svg>'), { filename: 'logo.svg', contentType: 'image/svg+xml' });
+
+  assert.equal(logoUpload.statusCode, 201);
+
+  const logoResponse = await request(app)
+    .get('/api/profile/company-logo')
+    .set('Authorization', `Bearer ${recruiterToken}`);
+
+  assert.equal(logoResponse.statusCode, 200);
+  assert.equal(logoResponse.headers['content-type'], 'image/svg+xml');
+
+  const deletePhoto = await request(app)
+    .delete('/api/profile/photo')
+    .set('Authorization', `Bearer ${candidateToken}`);
+  const deleteLogo = await request(app)
+    .delete('/api/profile/company-logo')
+    .set('Authorization', `Bearer ${recruiterToken}`);
+
+  assert.equal(deletePhoto.statusCode, 204);
+  assert.equal(deleteLogo.statusCode, 204);
 });

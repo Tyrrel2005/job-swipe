@@ -2,7 +2,9 @@ const mongoose = require('mongoose');
 const fs = require('fs');
 const { Conversation, JobOffer, Match } = require('../models');
 const { getCvPath } = require('../utils/cvStorage');
+const { getProfilePhotoPath } = require('../utils/mediaStorage');
 const { createNotification } = require('../services/notificationService');
+const { calculateMatchingScore } = require('../utils/matchingScore');
 
 function isValidId(id) {
   return mongoose.Types.ObjectId.isValid(id);
@@ -37,6 +39,7 @@ async function createMatch(request, response) {
       candidateId: request.user._id,
       recruiterId: jobOffer.recruiterId,
       jobOfferId: jobOffer._id,
+      compatibilityScore: calculateMatchingScore(request.user.candidateProfile, jobOffer).score,
     });
 
     await createNotification({
@@ -151,6 +154,39 @@ async function getCandidateCvForMatch(request, response) {
   }
 }
 
+async function getCandidatePhotoForMatch(request, response) {
+  try {
+    if (request.user.role !== 'recruiter') {
+      return response.status(403).json({ message: 'Seul le recruteur peut consulter la photo du candidat.' });
+    }
+
+    if (!isValidId(request.params.id)) {
+      return response.status(400).json({ message: 'Identifiant de match invalide.' });
+    }
+
+    const match = await Match.findOne({
+      _id: request.params.id,
+      recruiterId: request.user._id,
+    }).populate('candidateId', 'candidateProfile');
+
+    if (!match || !match.candidateId.candidateProfile?.profilePhotoUrl) {
+      return response.status(404).json({ message: 'Photo du candidat introuvable.' });
+    }
+
+    const photoPath = getProfilePhotoPath(match.candidateId._id);
+
+    if (!fs.existsSync(photoPath)) {
+      return response.status(404).json({ message: 'Fichier photo introuvable.' });
+    }
+
+    return response.sendFile(photoPath, {
+      headers: { 'Content-Type': match.candidateId.candidateProfile.profilePhotoMimeType || 'image/jpeg' },
+    });
+  } catch (error) {
+    return response.status(500).json({ message: 'Erreur lors de la récupération de la photo candidat.', error: error.message });
+  }
+}
+
 async function updateMatchStatus(request, response) {
   try {
     if (request.user.role !== 'recruiter') {
@@ -224,5 +260,6 @@ module.exports = {
   listMatches,
   getCandidateProfileForMatch,
   getCandidateCvForMatch,
+  getCandidatePhotoForMatch,
   updateMatchStatus,
 };
