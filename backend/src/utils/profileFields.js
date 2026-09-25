@@ -16,7 +16,6 @@ const profileFields = {
     'diploma',
     'school',
     'graduationYear',
-    'cvUrl',
   ],
   recruiter: [
     'companyName',

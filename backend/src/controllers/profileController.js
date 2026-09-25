@@ -1,3 +1,6 @@
+const fs = require('fs');
+
+const { getCvPath, getCvUrl } = require('../utils/cvStorage');
 const { profileFields } = require('../utils/profileFields');
 
 function serializeProfileUser(user) {
@@ -63,4 +66,82 @@ async function updateProfile(request, response) {
   }
 }
 
-module.exports = { getProfile, updateProfile };
+async function uploadCv(request, response) {
+  try {
+    if (request.user.role !== 'candidate') {
+      return response.status(403).json({ message: 'Seul un candidat peut gérer un CV.' });
+    }
+
+    if (!request.file) {
+      return response.status(400).json({ message: 'Le fichier CV est requis dans le champ cv.' });
+    }
+
+    const currentProfile = request.user.candidateProfile
+      ? request.user.candidateProfile.toObject()
+      : {};
+
+    request.user.candidateProfile = {
+      ...currentProfile,
+      cvUrl: getCvUrl(),
+    };
+    await request.user.save();
+
+    return response.status(201).json({
+      message: 'CV enregistré avec succès.',
+      cvUrl: getCvUrl(),
+    });
+  } catch (error) {
+    if (request.file) {
+      fs.rmSync(request.file.path, { force: true });
+    }
+
+    return response.status(500).json({
+      message: "Erreur lors de l'enregistrement du CV.",
+      error: error.message,
+    });
+  }
+}
+
+async function getCv(request, response) {
+  if (request.user.role !== 'candidate') {
+    return response.status(403).json({ message: 'Seul le candidat peut accéder à cette route.' });
+  }
+
+  if (!request.user.candidateProfile?.cvUrl) {
+    return response.status(404).json({ message: 'Aucun CV enregistré.' });
+  }
+
+  const cvPath = getCvPath(request.user._id);
+
+  if (!fs.existsSync(cvPath)) {
+    return response.status(404).json({ message: 'Fichier CV introuvable.' });
+  }
+
+  return response.sendFile(cvPath, { headers: { 'Content-Type': 'application/pdf' } });
+}
+
+async function deleteCv(request, response) {
+  try {
+    if (request.user.role !== 'candidate') {
+      return response.status(403).json({ message: 'Seul un candidat peut supprimer un CV.' });
+    }
+
+    fs.rmSync(getCvPath(request.user._id), { force: true });
+
+    const currentProfile = request.user.candidateProfile
+      ? request.user.candidateProfile.toObject()
+      : {};
+
+    request.user.candidateProfile = { ...currentProfile, cvUrl: '' };
+    await request.user.save();
+
+    return response.status(204).send();
+  } catch (error) {
+    return response.status(500).json({
+      message: 'Erreur lors de la suppression du CV.',
+      error: error.message,
+    });
+  }
+}
+
+module.exports = { getProfile, updateProfile, uploadCv, getCv, deleteCv };

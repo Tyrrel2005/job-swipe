@@ -1,5 +1,7 @@
 const mongoose = require('mongoose');
+const fs = require('fs');
 const { Conversation, JobOffer, Match } = require('../models');
+const { getCvPath } = require('../utils/cvStorage');
 
 function isValidId(id) {
   return mongoose.Types.ObjectId.isValid(id);
@@ -69,6 +71,75 @@ async function listMatches(request, response) {
   }
 }
 
+async function getCandidateProfileForMatch(request, response) {
+  try {
+    if (request.user.role !== 'recruiter') {
+      return response.status(403).json({ message: 'Seul le recruteur peut consulter le profil du candidat.' });
+    }
+
+    if (!isValidId(request.params.id)) {
+      return response.status(400).json({ message: 'Identifiant de match invalide.' });
+    }
+
+    const match = await Match.findOne({
+      _id: request.params.id,
+      recruiterId: request.user._id,
+    }).populate('candidateId', 'email role candidateProfile');
+
+    if (!match) {
+      return response.status(404).json({ message: 'Match introuvable.' });
+    }
+
+    return response.status(200).json({
+      matchId: match._id,
+      status: match.status,
+      candidate: match.candidateId,
+      cvUrl: match.candidateId.candidateProfile?.cvUrl
+        ? `/api/matches/${match._id}/candidate-cv`
+        : null,
+    });
+  } catch (error) {
+    return response.status(500).json({
+      message: 'Erreur lors de la récupération du profil candidat.',
+      error: error.message,
+    });
+  }
+}
+
+async function getCandidateCvForMatch(request, response) {
+  try {
+    if (request.user.role !== 'recruiter') {
+      return response.status(403).json({ message: 'Seul le recruteur peut consulter le CV du candidat.' });
+    }
+
+    if (!isValidId(request.params.id)) {
+      return response.status(400).json({ message: 'Identifiant de match invalide.' });
+    }
+
+    const match = await Match.findOne({
+      _id: request.params.id,
+      recruiterId: request.user._id,
+    }).populate('candidateId', 'candidateProfile');
+
+    if (!match || !match.candidateId.candidateProfile?.cvUrl) {
+      return response.status(404).json({ message: 'CV du candidat introuvable.' });
+    }
+
+    const cvPath = getCvPath(match.candidateId._id);
+
+    if (!fs.existsSync(cvPath)) {
+      return response.status(404).json({ message: 'Fichier CV introuvable.' });
+    }
+
+    return response.sendFile(cvPath, { headers: { 'Content-Type': 'application/pdf' } });
+  } catch (error) {
+    return response.status(500).json({
+      message: 'Erreur lors de la récupération du CV candidat.',
+      error: error.message,
+    });
+  }
+}
+
 async function updateMatchStatus(request, response) {
   try {
     if (request.user.role !== 'recruiter') {
@@ -125,4 +196,10 @@ async function updateMatchStatus(request, response) {
   }
 }
 
-module.exports = { createMatch, listMatches, updateMatchStatus };
+module.exports = {
+  createMatch,
+  listMatches,
+  getCandidateProfileForMatch,
+  getCandidateCvForMatch,
+  updateMatchStatus,
+};
