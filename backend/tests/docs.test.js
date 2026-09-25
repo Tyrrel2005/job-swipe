@@ -13,4 +13,6 @@ test('OpenAPI documentation exposes the backend routes', async () => {
   assert.ok(response.body.paths['/api/auth/login']);
   assert.ok(response.body.paths['/api/jobs']);
   assert.ok(response.body.paths['/api/conversations/{id}/messages']);
+  assert.ok(response.body.paths['/api/conversations/{id}/unread']);
+  assert.ok(response.body.paths['/api/conversations/{id}/read']);
 });

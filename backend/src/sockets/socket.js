@@ -86,6 +86,37 @@ function registerSocketHandlers(io) {
       return callback?.({ success: true, conversationId });
     });
 
+    socket.on('conversation:read', async (payload, callback) => {
+      try {
+        const conversationId = payload?.conversationId;
+        const conversation = await getAcceptedConversation(conversationId, socket.user._id);
+
+        if (!conversation) {
+          return emitSocketError(socket, callback, 'Conversation inaccessible.');
+        }
+
+        const result = await Message.updateMany(
+          {
+            conversationId: conversation._id,
+            senderId: { $ne: socket.user._id },
+            readBy: { $ne: socket.user._id },
+          },
+          { $addToSet: { readBy: socket.user._id } }
+        );
+
+        const data = {
+          conversationId: conversation._id,
+          userId: socket.user._id,
+          markedCount: result.modifiedCount,
+        };
+
+        io.to(`conversation:${conversation._id}`).emit('message:read', data);
+        return callback?.({ success: true, data });
+      } catch (_error) {
+        return emitSocketError(socket, callback, 'Impossible de marquer la conversation comme lue.');
+      }
+    });
+
     socket.on('message:send', async (payload, callback) => {
       try {
         const conversationId = payload?.conversationId;

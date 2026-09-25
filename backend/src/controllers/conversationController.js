@@ -53,6 +53,67 @@ async function listMessages(request, response) {
   }
 }
 
+async function getUnreadCount(request, response) {
+  try {
+    if (!isValidId(request.params.id)) {
+      return response.status(400).json({ message: 'Identifiant de conversation invalide.' });
+    }
+
+    const conversation = await findAccessibleConversation(request.params.id, request.user._id);
+
+    if (!conversation) {
+      return response.status(404).json({ message: 'Conversation introuvable.' });
+    }
+
+    const unreadCount = await Message.countDocuments({
+      conversationId: conversation._id,
+      senderId: { $ne: request.user._id },
+      readBy: { $ne: request.user._id },
+    });
+
+    return response.status(200).json({ conversationId: conversation._id, unreadCount });
+  } catch (error) {
+    return response.status(500).json({
+      message: 'Erreur lors du comptage des messages non lus.',
+      error: error.message,
+    });
+  }
+}
+
+async function markConversationAsRead(request, response) {
+  try {
+    if (!isValidId(request.params.id)) {
+      return response.status(400).json({ message: 'Identifiant de conversation invalide.' });
+    }
+
+    const conversation = await findAccessibleConversation(request.params.id, request.user._id);
+
+    if (!conversation) {
+      return response.status(404).json({ message: 'Conversation introuvable.' });
+    }
+
+    const result = await Message.updateMany(
+      {
+        conversationId: conversation._id,
+        senderId: { $ne: request.user._id },
+        readBy: { $ne: request.user._id },
+      },
+      { $addToSet: { readBy: request.user._id } }
+    );
+
+    return response.status(200).json({
+      message: 'Conversation marquée comme lue.',
+      conversationId: conversation._id,
+      markedCount: result.modifiedCount,
+    });
+  } catch (error) {
+    return response.status(500).json({
+      message: 'Erreur lors du marquage de la conversation.',
+      error: error.message,
+    });
+  }
+}
+
 async function sendMessage(request, response) {
   try {
     if (!isValidId(request.params.id)) {
@@ -99,4 +160,10 @@ async function sendMessage(request, response) {
   }
 }
 
-module.exports = { listConversations, listMessages, sendMessage };
+module.exports = {
+  listConversations,
+  listMessages,
+  getUnreadCount,
+  markConversationAsRead,
+  sendMessage,
+};

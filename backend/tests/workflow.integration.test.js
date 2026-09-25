@@ -174,6 +174,26 @@ test('participants can exchange messages through HTTP', async () => {
   assert.equal(messagesResponse.statusCode, 200);
   assert.equal(messagesResponse.body.messages.length, 1);
   assert.equal(messagesResponse.body.messages[0].content, 'Bonjour, votre offre m interesse.');
+
+  const unreadResponse = await request(app)
+    .get(`/api/conversations/${conversationId}/unread`)
+    .set('Authorization', `Bearer ${recruiterToken}`);
+
+  assert.equal(unreadResponse.statusCode, 200);
+  assert.equal(unreadResponse.body.unreadCount, 1);
+
+  const readResponse = await request(app)
+    .patch(`/api/conversations/${conversationId}/read`)
+    .set('Authorization', `Bearer ${recruiterToken}`);
+
+  assert.equal(readResponse.statusCode, 200);
+  assert.equal(readResponse.body.markedCount, 1);
+
+  const afterReadResponse = await request(app)
+    .get(`/api/conversations/${conversationId}/unread`)
+    .set('Authorization', `Bearer ${recruiterToken}`);
+
+  assert.equal(afterReadResponse.body.unreadCount, 0);
 });
 
 test('candidate CV is uploaded, downloaded and deleted', async () => {
@@ -204,35 +224,37 @@ test('candidate CV is uploaded, downloaded and deleted', async () => {
   assert.equal(deleteResponse.statusCode, 204);
 });
 
-test('Socket.IO authenticates participants and broadcasts a message', async () => {
-  const { candidateToken, conversationId } = await createAcceptedConversation();
+test('Socket.IO authenticates participants, broadcasts messages and read state', async () => {
+  const { candidateToken, recruiterToken, conversationId } = await createAcceptedConversation();
   const { ioServer, httpServer, url } = await startSocketServer();
-  const socket = createSocket(url, {
+  const candidateSocket = createSocket(url, {
     auth: { token: candidateToken },
+    transports: ['websocket'],
+  });
+  const recruiterSocket = createSocket(url, {
+    auth: { token: recruiterToken },
     transports: ['websocket'],
   });
 
   try {
-    await new Promise((resolve, reject) => {
+    await Promise.all([candidateSocket, recruiterSocket].map((socket) => new Promise((resolve, reject) => {
       socket.once('connect', resolve);
       socket.once('connect_error', reject);
-    });
+    })));
 
-    const joinResponse = await new Promise((resolve) => {
+    await Promise.all([candidateSocket, recruiterSocket].map((socket) => new Promise((resolve) => {
       socket.emit('conversation:join', { conversationId }, resolve);
-    });
-
-    assert.equal(joinResponse.success, true);
+    })));
 
     const messagePromise = new Promise((resolve, reject) => {
       const timeout = setTimeout(() => reject(new Error('message:new non recu')), 3000);
-      socket.once('message:new', (message) => {
+      recruiterSocket.once('message:new', (message) => {
         clearTimeout(timeout);
         resolve(message);
       });
     });
 
-    socket.emit('message:send', {
+    candidateSocket.emit('message:send', {
       conversationId,
       content: 'Message temps reel',
     });
@@ -240,8 +262,25 @@ test('Socket.IO authenticates participants and broadcasts a message', async () =
     const message = await messagePromise;
     assert.equal(message.content, 'Message temps reel');
     assert.equal(message.senderRole, 'candidate');
+
+    const readPromise = new Promise((resolve, reject) => {
+      const timeout = setTimeout(() => reject(new Error('message:read non recu')), 3000);
+      candidateSocket.once('message:read', (data) => {
+        clearTimeout(timeout);
+        resolve(data);
+      });
+    });
+
+    recruiterSocket.emit('conversation:read', {
+      conversationId,
+    });
+
+    const readData = await readPromise;
+    assert.equal(readData.conversationId.toString(), conversationId);
+    assert.equal(readData.markedCount, 1);
   } finally {
-    socket.close();
+    candidateSocket.close();
+    recruiterSocket.close();
     await closeSocketServer(ioServer, httpServer);
   }
 });
