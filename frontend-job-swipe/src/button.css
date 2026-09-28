@@ -1,0 +1,31 @@
+.button-connection{
+    transition-duration: 400ms;
+    border: 0.5px solid #e8e8e8;
+    padding: 10px;
+    color: blue;
+    text-decoration: none;
+    font-size: 30px;
+    size: 150px;
+    margin: 5px;
+}
+.button-connection:hover{
+    transition-duration: 400ms;
+    color: white;
+    background-color: blue;
+}
+
+.button-form{
+    transition-duration: 400ms;
+    border: 1px solid #e8e8e8;
+    background-color: white;
+    padding: 10px;
+    color: blue;
+    margin: 5px;
+    font-size: 20px;
+}
+.button-form:hover{
+    color: white;
+    border-radius: 6px;
+    background-color: blue;
+    border: 1px white solid;
+}

@@ -1,0 +1,18 @@
+.main-title{
+    text-align: center;
+    color: blue;
+    font-size: 80px;
+    font-family: 'Courier New', Courier, monospace;
+}
+.secondary-title{
+    text-align: center;
+    color: blue;
+    font-size: 40px;
+    margin: 20px;
+    font-family: 'Courier New', Courier, monospace;
+}
+
+.form-para{
+    color: blue;
+    font-size: 20px;
+}

@@ -1,13 +1,26 @@
 
 import './App.css'
+import './para-title.css'
+import './button.css'
+import './container.css'
+import './input.css'
+import Welcome from './components/Welcome'
+import {BrowserRouter, Routes, Route } from "react-router"
+import Connection from './components/Connection'
+import AccountCreation from './components/AccountCreation'
 
 function App() {
 
 
   return (
-    <div>
-
-    </div>
+    <BrowserRouter>
+          <h1 className="main-title">Job Swipe</h1>
+      <Routes>
+        <Route path="/" element={<Welcome></Welcome>} />
+        <Route path="/connect" element={<Connection></Connection>}></Route>
+        <Route path='/create-account' element={<AccountCreation></AccountCreation>}/>
+      </Routes>
+    </BrowserRouter>
   )
 }
 
