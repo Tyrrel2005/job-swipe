@@ -3,6 +3,7 @@
     color: blue;
     font-size: 80px;
     font-family: 'Courier New', Courier, monospace;
+    margin: 1px;
 }
 .secondary-title{
     text-align: center;
