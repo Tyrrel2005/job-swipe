@@ -8,6 +8,8 @@ import Welcome from './components/Welcome'
 import {BrowserRouter, Routes, Route } from "react-router"
 import Connection from './components/Connection'
 import AccountCreation from './components/AccountCreation'
+import { JobPosting } from './components/JobPosting';
+import { Matching } from './components/Matching'
 
 function App() {
 
@@ -18,7 +20,9 @@ function App() {
       <Routes>
         <Route path="/" element={<Welcome></Welcome>} />
         <Route path="/connect" element={<Connection></Connection>}></Route>
-        <Route path='/create-account' element={<AccountCreation></AccountCreation>}/>
+        <Route path='/create-account' element={<AccountCreation></AccountCreation>} />
+        <Route path='/create-job' element={<JobPosting></JobPosting>}></Route>
+        <Route path='/matching' element={<Matching></Matching>}></Route>
       </Routes>
     </BrowserRouter>
   )
