@@ -13,6 +13,10 @@ export function Matching() {
         salaryMax: "4500",
         minimumDegree:"MASTER"
       }}></OffreComponent>
+      <div className="container-row">
+        <button className="button-no">refuser</button>
+        <button className="button-yes">accepter</button>
+      </div>
     </div>
   )
 }

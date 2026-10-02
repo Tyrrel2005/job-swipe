@@ -46,3 +46,35 @@
     background-color: blue;
     color: white;
 }
+.button-yes{
+    color: blue;
+    background-color: white;
+    border: 1px solid #e8e8e8;
+    transition-duration: 400ms;
+    font-size: 20px;
+    padding: 10px;
+    margin: 5px;
+    border-radius: 7px;
+}
+.button-yes:hover{
+    transition-duration: 400ms;
+    color: white;
+    background-color: green;
+
+}
+.button-no{
+    color: blue;
+    background-color: white;
+    border: 1px solid #e8e8e8;
+    transition-duration: 400ms;
+    font-size: 20px;
+    padding: 10px;
+    margin: 5px;
+    border-radius: 7px;
+}
+.button-no:hover{
+    transition-duration: 400ms;
+    color: white;
+    background-color: red;
+
+}
