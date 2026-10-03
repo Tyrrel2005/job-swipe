@@ -11,7 +11,9 @@ export function FormCreationPartOne() {
       <label className="form-para">adresse mail</label>
       <input type="mail" className="input-text"></input>
       <label className="form-para">téléphone</label>
-      <input type="tel" className="input-text"></input>
+        <input type="tel" className="input-text"></input>
+        <label className="form-para">compétences (minimum 1)</label>
+        <input className="input-text" name="competences" type="text"></input>
       <label className="form-para">site web</label>
       <input className="input-text" name="website" type="text"></input>
       <label className="form-para">mot de passe</label>
