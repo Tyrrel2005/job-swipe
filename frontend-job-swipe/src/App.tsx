@@ -11,6 +11,8 @@ import AccountCreation from './components/AccountCreation'
 import { JobPosting } from './components/JobPosting';
 import { Matching } from './components/Matching'
 import { ProfilePart } from './components/subComponents/ProfilePart';
+import { Profile } from './components/Profil';
+import Dashboard from './components/Dashboard';
 
 function App() {
 
@@ -24,7 +26,8 @@ function App() {
         <Route path='/create-account' element={<AccountCreation></AccountCreation>} />
         <Route path='/create-job' element={<JobPosting></JobPosting>}></Route>
         <Route path='/matching' element={<Matching></Matching>}></Route>
-        <Route path='/profile-part' element={ <ProfilePart></ProfilePart> }></Route>
+        <Route path='/profile-part' element={<Profile></Profile>}></Route>
+        <Route path='/dashboard' element={<Dashboard></Dashboard>}></Route>
       </Routes>
     </BrowserRouter>
   )
