@@ -256,6 +256,7 @@ swaggerSpec.paths = {
     parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string' } }],
     get: { summary: 'Lire les messages', security: [{ bearerAuth: [] }], responses: { 200: { description: 'Messages de la conversation.' }, 404: { description: 'Conversation inaccessible.' } } },
     post: { summary: 'Envoyer un message', security: [{ bearerAuth: [] }], requestBody: { required: true, content: { 'application/json': { schema: { type: 'object', required: ['content'], properties: { content: { type: 'string', maxLength: 5000 } } } } } }, responses: { 201: { description: 'Message envoye.' }, 400: { description: 'Message invalide.' }, 404: { description: 'Conversation inaccessible.' } } },
+    delete: { summary: 'Vider les messages d’une conversation', security: [{ bearerAuth: [] }], responses: { 200: { description: 'Messages supprimes.' }, 404: { description: 'Conversation inaccessible.' } } },
   },
   '/api/conversations/{id}/unread': {
     get: { summary: 'Compter les messages non lus', security: [{ bearerAuth: [] }], parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string' } }], responses: { 200: { description: 'Nombre de messages non lus.' }, 404: { description: 'Conversation inaccessible.' } } },

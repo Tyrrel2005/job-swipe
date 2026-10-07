@@ -29,6 +29,42 @@ async function listConversations(request, response) {
   }
 }
 
+async function ensureConversationForMatch(request, response) {
+  try {
+    if (!isValidId(request.params.matchId)) {
+      return response.status(400).json({ message: 'Identifiant de match invalide.' });
+    }
+
+    const match = await Match.findOne({
+      _id: request.params.matchId,
+      status: 'accepted',
+      $or: [{ candidateId: request.user._id }, { recruiterId: request.user._id }],
+    });
+
+    if (!match) {
+      return response.status(404).json({ message: 'Match accepté introuvable ou conversation inaccessible.' });
+    }
+
+    const conversation = await Conversation.findOneAndUpdate(
+      { matchId: match._id },
+      {
+        $setOnInsert: {
+          matchId: match._id,
+          participantIds: [match.candidateId, match.recruiterId],
+        },
+      },
+      { new: true, upsert: true, setDefaultsOnInsert: true }
+    );
+
+    return response.status(200).json({ conversation });
+  } catch (error) {
+    return response.status(500).json({
+      message: "Erreur lors de l'ouverture de la conversation.",
+      error: error.message,
+    });
+  }
+}
+
 async function listMessages(request, response) {
   try {
     if (!isValidId(request.params.id)) {
@@ -148,6 +184,12 @@ async function sendMessage(request, response) {
 
     conversation.lastMessageAt = message.createdAt;
     await conversation.save();
+    await message.populate('senderId', 'email role');
+
+    const io = request.app.get('io');
+    if (io) {
+      io.to(`conversation:${conversation._id}`).emit('message:new', message);
+    }
 
     const recipientId = conversation.participantIds.find(
       (participantId) => participantId.toString() !== request.user._id.toString()
@@ -175,10 +217,39 @@ async function sendMessage(request, response) {
   }
 }
 
+async function clearMessages(request, response) {
+  try {
+    if (!isValidId(request.params.id)) {
+      return response.status(400).json({ message: 'Identifiant de conversation invalide.' });
+    }
+
+    const conversation = await findAccessibleConversation(request.params.id, request.user._id);
+
+    if (!conversation) {
+      return response.status(404).json({ message: 'Conversation introuvable.' });
+    }
+
+    const result = await Message.deleteMany({ conversationId: conversation._id });
+
+    return response.status(200).json({
+      message: 'Messages supprimés avec succès.',
+      conversationId: conversation._id,
+      deletedCount: result.deletedCount,
+    });
+  } catch (error) {
+    return response.status(500).json({
+      message: 'Erreur lors de la suppression des messages.',
+      error: error.message,
+    });
+  }
+}
+
 module.exports = {
+  ensureConversationForMatch,
   listConversations,
   listMessages,
   getUnreadCount,
   markConversationAsRead,
   sendMessage,
+  clearMessages,
 };

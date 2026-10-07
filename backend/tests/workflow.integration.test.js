@@ -203,6 +203,16 @@ test('participants can exchange messages through HTTP', async () => {
     .send({ content: 'Bonjour, votre offre m interesse.' });
 
   assert.equal(sendResponse.statusCode, 201);
+  assert.equal(sendResponse.body.data.senderRole, 'candidate');
+
+  const recruiterSendResponse = await request(app)
+    .post(`/api/conversations/${conversationId}/messages`)
+    .set('Authorization', `Bearer ${recruiterToken}`)
+    .send({ content: 'Bonjour, merci pour votre message.' });
+
+  assert.equal(recruiterSendResponse.statusCode, 201);
+  assert.equal(recruiterSendResponse.body.data.senderRole, 'recruiter');
+  assert.notEqual(recruiterSendResponse.body.data.senderId, sendResponse.body.data.senderId);
 
   const recruiterNotifications = await request(app)
     .get('/api/notifications?unreadOnly=true')
@@ -216,8 +226,11 @@ test('participants can exchange messages through HTTP', async () => {
     .set('Authorization', `Bearer ${recruiterToken}`);
 
   assert.equal(messagesResponse.statusCode, 200);
-  assert.equal(messagesResponse.body.messages.length, 1);
+  assert.equal(messagesResponse.body.messages.length, 2);
   assert.equal(messagesResponse.body.messages[0].content, 'Bonjour, votre offre m interesse.');
+  assert.equal(messagesResponse.body.messages[0].senderRole, 'candidate');
+  assert.equal(messagesResponse.body.messages[1].content, 'Bonjour, merci pour votre message.');
+  assert.equal(messagesResponse.body.messages[1].senderRole, 'recruiter');
 
   const unreadResponse = await request(app)
     .get(`/api/conversations/${conversationId}/unread`)
