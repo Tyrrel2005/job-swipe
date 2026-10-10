@@ -13,6 +13,7 @@ import { Matching } from './components/Matching'
 import { ProfilePart } from './components/subComponents/ProfilePart';
 import { Profile } from './components/Profil';
 import Dashboard from './components/Dashboard';
+import { Chat } from './components/Chat'
 
 function App() {
 
@@ -28,6 +29,7 @@ function App() {
         <Route path='/matching' element={<Matching></Matching>}></Route>
         <Route path='/profile-part' element={<Profile></Profile>}></Route>
         <Route path='/dashboard' element={<Dashboard></Dashboard>}></Route>
+        <Route path='/chat' element={<Chat></Chat>}></Route>
       </Routes>
     </BrowserRouter>
   )
