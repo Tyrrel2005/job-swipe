@@ -1,0 +1,24 @@
+import { useEffect, useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
+import { api } from '../lib/api';
+import { initials } from '../lib/format';
+export function Icon({name, filled = false, size = 24, className = ''}) { return <span aria-hidden="true" className={`material-symbols-outlined ${filled ? 'filled' : ''} ${className}`} style={{fontSize:size}}>{name}</span>; }
+export function Button({children, variant='primary', busy=false, icon, className='', ...props}) { return <button {...props} disabled={props.disabled || busy} className={`btn btn-${variant} ${className}`}>{busy ? <Icon name="progress_activity" className="spin" size={20}/> : icon && <Icon name={icon} size={21}/>} {children}</button>; }
+export function Input({label, hint, error, ...props}) { return <label className="field-label">{label && <span className="field-title">{label}</span>}<input className="field" {...props}/>{hint && <span className="field-hint">{hint}</span>}{error && <span className="field-error">{error}</span>}</label>; }
+export function Select({label, options = [], ...props}) {return <label className="field-label"><span className="field-title">{label}</span><select className="field" {...props}>{options.map(opt=><option key={typeof opt==='string'?opt:opt.value} value={typeof opt==='string'?opt:opt.value}>{typeof opt==='string'?opt:opt.label}</option>)}</select></label>;}
+export function Textarea({label,...props}) { return <label className="field-label"><span className="field-title">{label}</span><textarea className="field" {...props}/></label>; }
+export function Chips({options, value, onChange, multiple=false, tone='blue'}) { const selected = multiple ? value || [] : [value]; return <div className="chips">{options.map(item => {const v=typeof item==='string'?item:item.value;const label=typeof item==='string'?item:item.label;const on=selected.includes(v);return <button type="button" key={v} aria-pressed={on} className={`chip ${on ? `selected ${tone}` : ''}`} onClick={()=>onChange(multiple ? (on?selected.filter(i=>i!==v):[...selected,v]) : v)}>{label}</button>;})}</div>; }
+export function Head({title, back, actions, eyebrow}) { const nav=useNavigate(); return <header className="page-header">{back && <button className="icon-btn" onClick={()=>back===true?nav(-1):nav(back)} aria-label="Retour"><Icon name="arrow_back"/></button>}<div className="page-heading">{eyebrow && <span className="eyebrow">{eyebrow}</span>}<strong>{title}</strong></div>{actions}</header>; }
+export function Banner({children, kind='info'}) { return <div className={`banner banner-${kind}`} role="alert"><Icon name={kind==='error'?'error_outline':kind==='success'?'check_circle':'info'} size={20}/><span>{children}</span></div>; }
+export function Empty({icon='inbox', title, children, action}) { return <div className="empty-state"><div className="empty-icon"><Icon name={icon} size={38}/></div><h3>{title}</h3><p>{children}</p>{action}</div>; }
+export function Spinner() { return <div className="loading-state"><Icon name="progress_activity" className="spin" size={34}/><span>Chargement…</span></div>; }
+export function Stat({icon,value,label,color='blue'}) {return <div className="stat-card"><Icon name={icon} className={`text-${color}`} size={22}/><strong>{value}</strong><span>{label}</span></div>;}
+export function Avatar({name, tone='blue', size='md', src}) {return <span className={`avatar avatar-${size} avatar-${tone}`}>{src?<img src={src} alt=""/>:initials(name)}</span>;}
+export function StepHead({step,total,title,onBack,tone='blue'}) {return <><header className="page-header"><button className="icon-btn" type="button" onClick={onBack} aria-label="Retour"><Icon name="arrow_back"/></button><div className="page-heading"><span className="eyebrow">ÉTAPE {step} SUR {total}</span><strong>{title}</strong></div></header><div className="progress"><div style={{width:`${100*step/total}%`}} className={tone}/></div></>;}
+export function AlertButton({title='Notifications'}) {
+  const [count,setCount]=useState(0); const nav=useNavigate(); const {user}=useAuth();
+  useEffect(()=>{if(!user)return;let live=true;async function load(){try{const r=await api.get('/notifications?unreadOnly=true');if(live)setCount(r.notifications?.length||0);}catch{ /* notifications optional while disconnected */ }}load();const timer=setInterval(load,30000);return()=>{live=false;clearInterval(timer);};},[user]);
+  return <button className="icon-btn notification-btn" title={title} aria-label={title} onClick={()=>nav('/notifications')}><Icon name="notifications"/>{count>0&&<span className="notif-dot"/>}</button>;
+}
+export function Brand({small=false}) {return <Link to="/" className={`brand ${small?'brand-small':''}`}><span className="brand-icon"><Icon name="style" filled size={small?20:26}/></span><span>JobSwipe</span></Link>;}

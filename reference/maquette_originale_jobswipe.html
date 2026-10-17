@@ -1,0 +1,1460 @@
+<!DOCTYPE html>
+<html class="light" lang="fr">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>JobSwipe — Prototype complet (candidat & recruteur)</title>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms"></script>
+<script>
+  tailwind.config = {
+    theme: { extend: {
+      colors: {
+        "primary": "#004ac6", "primary-container": "#2563eb", "primary-fixed": "#dbe1ff",
+        "on-primary": "#ffffff", "on-primary-container": "#eeefff",
+        "secondary": "#006c49", "secondary-container": "#6cf8bb", "on-secondary-container": "#00714d",
+        "secondary-fixed-dim": "#4edea3",
+        "tertiary": "#ad0033", "tertiary-container": "#d22348",
+        "error": "#ba1a1a", "error-container": "#ffdad6", "on-error-container": "#93000a",
+        "surface": "#faf8ff", "surface-container-lowest": "#ffffff", "surface-container-low": "#f2f3ff",
+        "surface-container": "#eaedff", "surface-container-high": "#e2e7ff", "surface-container-highest": "#dae2fd",
+        "on-surface": "#131b2e", "on-surface-variant": "#434655",
+        "outline": "#737686", "outline-variant": "#c3c6d7",
+        "inverse-surface": "#283044", "inverse-on-surface": "#eef0ff"
+      },
+      fontFamily: { sans: ["Plus Jakarta Sans", "system-ui", "sans-serif"] },
+      fontSize: {
+        "label-sm": ["11px", { lineHeight: "14px", letterSpacing: "0.04em", fontWeight: "700" }],
+        "label-md": ["12px", { lineHeight: "16px", letterSpacing: "0.02em", fontWeight: "600" }],
+        "label-lg": ["14px", { lineHeight: "20px", letterSpacing: "0.01em", fontWeight: "600" }],
+        "body-sm": ["12px", { lineHeight: "16px", fontWeight: "400" }],
+        "body-md": ["14px", { lineHeight: "20px", fontWeight: "400" }],
+        "body-lg": ["16px", { lineHeight: "24px", fontWeight: "400" }],
+        "headline-sm": ["16px", { lineHeight: "24px", letterSpacing: "-0.01em", fontWeight: "600" }],
+        "headline-md": ["20px", { lineHeight: "28px", letterSpacing: "-0.015em", fontWeight: "600" }],
+        "headline-xl-mobile": ["24px", { lineHeight: "32px", letterSpacing: "-0.02em", fontWeight: "700" }],
+        "headline-xl": ["28px", { lineHeight: "36px", letterSpacing: "-0.025em", fontWeight: "700" }],
+        "display-lg": ["36px", { lineHeight: "44px", letterSpacing: "-0.03em", fontWeight: "800" }],
+        "stat-numeric": ["18px", { lineHeight: "24px", letterSpacing: "-0.02em", fontWeight: "700" }]
+      }
+    } }
+  }
+</script>
+<style>
+  :root { color-scheme: light; }
+  body { background: #faf8ff; font-family: 'Plus Jakarta Sans', system-ui, sans-serif; }
+  .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 500, 'GRAD' 0, 'opsz' 24; line-height: 1; display: inline-block; }
+  .fill { font-variation-settings: 'FILL' 1, 'wght' 600, 'GRAD' 0, 'opsz' 24; }
+  .screen { display: none; flex-direction: column; min-height: 100vh; }
+  .screen.active { display: flex; }
+  .scroll::-webkit-scrollbar { width: 4px; height: 4px; }
+  .scroll::-webkit-scrollbar-thumb { background: #c3c6d7; border-radius: 9999px; }
+  .chip { transition: transform .12s ease, background-color .12s, border-color .12s; }
+  .chip:active { transform: scale(.94); }
+  .field { border-radius: 16px; background: #f2f3ff; border: 1px solid #c3c6d7; padding: 12px 16px; width: 100%; font-size: 15px; color: #131b2e; }
+  input:focus, textarea:focus, select:focus { outline: none; border-color: #2563eb !important; box-shadow: 0 0 0 3px rgba(37,99,235,.15); }
+  .btn-primary { background:#2563eb; color:#fff; border-radius:20px; font-weight:600; box-shadow:0 12px 28px -10px rgba(37,99,235,.6); }
+  .btn-green { background:#006c49; color:#fff; border-radius:20px; font-weight:600; box-shadow:0 12px 28px -10px rgba(0,108,73,.55); }
+  .deck-card { transition: transform .45s cubic-bezier(.2,.8,.2,1), opacity .45s ease; }
+  .stamp { position:absolute; top:24px; padding:6px 16px; border:3px solid; border-radius:12px; font-weight:800; letter-spacing:.06em; opacity:0; transition:opacity .2s; }
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+  @media print { .no-print { display:none } }
+</style>
+</head>
+<body class="text-on-surface antialiased">
+<div class="mx-auto w-full max-w-md min-h-screen bg-surface relative overflow-hidden" id="app">
+
+<!-- ═══════════ 1. ACCUEIL ═══════════ -->
+<section class="screen active px-5" id="sc-landing">
+  <div class="flex-1 flex flex-col justify-center py-10">
+    <div class="flex items-center gap-2">
+      <div class="w-12 h-12 rounded-2xl bg-primary-container grid place-items-center text-white"><span class="material-symbols-outlined fill">style</span></div>
+      <p class="text-headline-xl text-primary-container font-extrabold">JobSwipe</p>
+    </div>
+    <h1 class="text-display-lg mt-6 leading-tight">Le recrutement par intérêt réciproque</h1>
+    <p class="text-body-lg text-on-surface-variant mt-3">Le candidat manifeste son intérêt. Le recruteur n'examine que les profils intéressés. La conversation s'ouvre seulement si les deux sont d'accord.</p>
+
+    <div class="mt-8 rounded-[28px] bg-surface-container-lowest border border-outline-variant p-4 shadow-xl shadow-on-surface/5">
+      <div class="flex items-center gap-3">
+        <div class="w-12 h-12 rounded-2xl bg-primary-fixed text-primary grid place-items-center font-bold">FN</div>
+        <div class="flex-1"><p class="text-headline-sm">Développeur Fullstack Senior</p><p class="text-body-sm text-on-surface-variant">FinTech Nova · Paris · Hybride</p></div>
+        <span class="text-label-md px-2.5 py-1 rounded-full bg-secondary-container text-on-secondary-container">94 %</span>
+      </div>
+      <div class="mt-3 flex items-center justify-between pt-3 border-t border-outline-variant/40">
+        <span class="text-label-md text-tertiary flex items-center gap-1"><span class="material-symbols-outlined text-[18px]">close</span> Passer</span>
+        <span class="text-body-sm text-outline">Glissez pour décider</span>
+        <span class="text-label-md text-secondary flex items-center gap-1">Postuler <span class="material-symbols-outlined text-[18px] fill">favorite</span></span>
+      </div>
+    </div>
+
+    <button class="mt-8 w-full h-14 btn-primary" onclick="go('sc-auth')">Commencer</button>
+    <button class="mt-2 w-full h-12 rounded-[20px] border border-outline-variant text-label-lg text-primary bg-surface-container-lowest" onclick="go('sc-auth')">J'ai déjà un compte</button>
+    <p class="mt-6 text-body-sm text-outline text-center">Données hébergées en France · Conforme RGPD</p>
+  </div>
+</section>
+
+<!-- ═══════════ 2. AUTHENTIFICATION ═══════════ -->
+<section class="screen" id="sc-auth">
+  <header class="flex items-center gap-3 px-4 h-16 shrink-0">
+    <button class="w-10 h-10 rounded-full grid place-items-center text-on-surface-variant" onclick="go('sc-landing')"><span class="material-symbols-outlined">arrow_back</span></button>
+    <p class="text-headline-md text-primary-container font-extrabold flex-1">JobSwipe</p>
+  </header>
+  <div class="flex-1 overflow-y-auto scroll px-5 pb-10">
+    <div class="rounded-full bg-surface-container p-1 flex" id="auth-tabs">
+      <button class="flex-1 h-11 rounded-full bg-surface-container-lowest text-primary text-label-lg shadow-sm" data-tab="login" onclick="authTab('login')">Connexion</button>
+      <button class="flex-1 h-11 rounded-full text-on-surface-variant text-label-lg" data-tab="signup" onclick="authTab('signup')">Inscription</button>
+    </div>
+
+    <p class="text-label-sm text-outline mt-6">VOTRE RÔLE</p>
+    <div class="mt-2 grid grid-cols-2 gap-3">
+      <button class="chip rounded-[20px] border-2 border-primary bg-primary-fixed p-4 text-left" data-role="candidat" onclick="pickRole('candidat')">
+        <span class="material-symbols-outlined text-primary">person_search</span>
+        <p class="text-label-lg text-primary mt-1">Candidat</p>
+      </button>
+      <button class="chip rounded-[20px] border border-outline-variant bg-surface-container-lowest p-4 text-left" data-role="recruteur" onclick="pickRole('recruteur')">
+        <span class="material-symbols-outlined text-on-surface-variant">apartment</span>
+        <p class="text-label-lg mt-1">Recruteur</p>
+      </button>
+    </div>
+
+    <div class="mt-6 space-y-4">
+      <label class="block"><span class="text-label-lg">Adresse email professionnelle</span><input class="field mt-2" id="auth-email" value="alexandre@domaine.fr"/></label>
+      <label class="block"><span class="text-label-lg">Mot de passe</span><input class="field mt-2" type="password" value="motdepasse123"/></label>
+      <p class="text-body-sm text-on-surface-variant" id="auth-hint">Le mot de passe est haché avec bcrypt ; la session repose sur un JWT vérifié à chaque requête REST et au handshake Socket.IO.</p>
+    </div>
+
+    <button class="mt-6 w-full h-14 btn-primary" id="auth-submit" onclick="submitAuth()">Se connecter</button>
+    <p class="mt-6 text-body-sm text-outline text-center">En continuant, vous acceptez les conditions générales et la politique de confidentialité.</p>
+  </div>
+</section>
+
+<!-- ═══════════ CANDIDAT — ONBOARDING 1 ═══════════ -->
+<section class="screen" id="sc-c1">
+  <div id="c1-head"></div>
+  <div class="flex-1 overflow-y-auto scroll px-5 pt-6 pb-36">
+    <h1 class="text-headline-xl-mobile">Complétez votre profil</h1>
+    <p class="text-body-md text-on-surface-variant mt-2">Les recruteurs ne voient que les candidats qui ont manifesté leur intérêt. Un profil complet augmente vos chances de match.</p>
+    <div class="mt-6 flex items-center gap-4">
+      <div class="w-20 h-20 rounded-full bg-surface-container-high grid place-items-center text-primary relative">
+        <span class="material-symbols-outlined text-[34px]">person</span>
+        <span class="absolute -bottom-1 -right-1 w-8 h-8 rounded-full bg-primary-container text-white grid place-items-center shadow-lg"><span class="material-symbols-outlined text-[18px]">photo_camera</span></span>
+      </div>
+      <div><p class="text-headline-sm">Photo de profil</p><p class="text-body-sm text-on-surface-variant">JPG ou PNG, 2 Mo maximum.</p></div>
+    </div>
+    <div class="mt-6 space-y-5">
+      <label class="block"><span class="text-label-lg">Prénom et nom</span><input class="field mt-2" id="c-name" value="Alexandre Moreau"/></label>
+      <label class="block"><span class="text-label-lg">Titre du poste recherché</span><input class="field mt-2" id="c-title" value="Développeur Fullstack"/></label>
+      <div class="grid grid-cols-2 gap-3">
+        <label class="block"><span class="text-label-lg">Localisation</span><input class="field mt-2 text-[14px]" id="c-loc" value="Limoges"/></label>
+        <label class="block"><span class="text-label-lg">Expérience</span>
+          <select class="field mt-2 text-[14px]" id="c-exp"><option>Moins d'1 an</option><option selected>1 à 3 ans</option><option>3 à 6 ans</option><option>Plus de 6 ans</option></select>
+        </label>
+      </div>
+      <div>
+        <div class="flex items-baseline justify-between"><span class="text-label-lg">Type d'offre recherché</span><span class="text-body-sm text-outline">Plusieurs choix</span></div>
+        <div class="mt-2 flex flex-wrap gap-2" id="contract-chips"></div>
+      </div>
+      <div><span class="text-label-lg">Disponibilité</span>
+        <div class="mt-2 flex flex-wrap gap-2" data-single>
+          <button class="chip px-4 py-2 rounded-full border text-label-md bg-primary-fixed border-primary text-primary" onclick="pickOne(this)">Immédiate</button>
+          <button class="chip px-4 py-2 rounded-full border text-label-md bg-surface-container-low border-outline-variant text-on-surface-variant" onclick="pickOne(this)">Sous 1 mois</button>
+          <button class="chip px-4 py-2 rounded-full border text-label-md bg-surface-container-low border-outline-variant text-on-surface-variant" onclick="pickOne(this)">Sous 3 mois</button>
+        </div>
+      </div>
+      <div><span class="text-label-lg">Mode de travail</span>
+        <div class="mt-2 flex flex-wrap gap-2" data-single>
+          <button class="chip px-4 py-2 rounded-full border text-label-md bg-surface-container-low border-outline-variant text-on-surface-variant" onclick="pickOne(this)">Sur site</button>
+          <button class="chip px-4 py-2 rounded-full border text-label-md bg-primary-fixed border-primary text-primary" onclick="pickOne(this)">Hybride</button>
+          <button class="chip px-4 py-2 rounded-full border text-label-md bg-surface-container-low border-outline-variant text-on-surface-variant" onclick="pickOne(this)">Télétravail total</button>
+        </div>
+      </div>
+      <div class="grid grid-cols-2 gap-3">
+        <label class="block"><span class="text-label-lg">Salaire minimum</span><input class="field mt-2 text-[14px]" value="38 000 €"/></label>
+        <label class="block"><span class="text-label-lg">Salaire visé</span><input class="field mt-2 text-[14px]" value="45 000 €"/></label>
+      </div>
+    </div>
+  </div>
+  <div class="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-md px-5 pb-5 pt-4 bg-surface/95 backdrop-blur-md">
+    <button class="w-full h-14 btn-primary" onclick="go('sc-c2')">Continuer vers les compétences</button>
+  </div>
+</section>
+
+<!-- ═══════════ CANDIDAT — ONBOARDING 2 : COMPÉTENCES ═══════════ -->
+<section class="screen" id="sc-c2">
+  <div id="c2-head"></div>
+  <div class="flex-1 overflow-y-auto scroll px-5 pt-5 pb-44">
+    <h1 class="text-headline-xl-mobile">Choisissez vos compétences</h1>
+    <p class="text-body-md text-on-surface-variant mt-2">Minimum 3 compétences. Elles calculent la correspondance avec les offres publiées.</p>
+    <div class="mt-5 -mx-5 px-5 flex gap-2 overflow-x-auto scroll pb-1" id="cat-bar"></div>
+    <div class="mt-5" id="skill-groups"></div>
+  </div>
+  <div class="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-md px-5 pb-5 pt-4 bg-surface/95 backdrop-blur-md">
+    <div class="flex flex-wrap gap-1 mb-3 max-h-14 overflow-hidden" id="skill-preview"></div>
+    <button class="w-full h-14 btn-primary disabled:opacity-40 disabled:shadow-none" id="btn-c2" onclick="go('sc-c3')">Continuer</button>
+  </div>
+</section>
+
+<!-- ═══════════ CANDIDAT — ONBOARDING 3 : FORMATION & LANGUES ═══════════ -->
+<section class="screen" id="sc-c3">
+  <div id="c3-head"></div>
+  <div class="flex-1 overflow-y-auto scroll px-5 pt-6 pb-36">
+    <h1 class="text-headline-xl-mobile">Niveau d'études et langues</h1>
+    <p class="text-body-md text-on-surface-variant mt-2">Beaucoup d'offres filtrent sur le diplôme et sur une langue minimum.</p>
+    <p class="text-label-lg mt-6">Niveau d'études le plus élevé</p>
+    <div class="mt-2 flex flex-wrap gap-2" id="degree-chips"></div>
+    <div class="mt-5 space-y-3 rounded-[20px] bg-surface-container-lowest border border-outline-variant p-4">
+      <p class="text-label-lg">Diplôme obtenu</p>
+      <label class="block"><span class="text-body-sm text-on-surface-variant">Intitulé</span><input class="field mt-1 text-[14px]" id="c-diploma" value="Cycle ingénieur informatique"/></label>
+      <div class="grid grid-cols-2 gap-3">
+        <label class="block"><span class="text-body-sm text-on-surface-variant">Établissement</span><input class="field mt-1 text-[14px]" id="c-school" value="3iL Ingénieurs"/></label>
+        <label class="block"><span class="text-body-sm text-on-surface-variant">Année</span><input class="field mt-1 text-[14px]" id="c-year" value="2026"/></label>
+      </div>
+    </div>
+    <div class="mt-6 flex items-baseline justify-between"><p class="text-label-lg">Langues et niveau</p><span class="text-body-sm text-outline">Échelle CECRL</span></div>
+    <div class="mt-2 space-y-3" id="lang-list"></div>
+    <div class="mt-3 rounded-[20px] border border-dashed border-outline-variant p-3 flex gap-2">
+      <select class="field text-[14px] flex-1" id="lang-new"><option value="">Ajouter une langue…</option><option>Espagnol</option><option>Allemand</option><option>Italien</option><option>Arabe</option><option>Portugais</option><option>Chinois</option></select>
+      <button class="h-12 px-4 rounded-[16px] bg-primary-container text-white text-label-md shrink-0" onclick="addLang()">Ajouter</button>
+    </div>
+  </div>
+  <div class="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-md px-5 pb-5 pt-4 bg-surface/95 backdrop-blur-md">
+    <button class="w-full h-14 btn-primary" onclick="go('sc-c4')">Continuer</button>
+  </div>
+</section>
+
+<!-- ═══════════ CANDIDAT — ONBOARDING 4 : DESCRIPTION ═══════════ -->
+<section class="screen" id="sc-c4">
+  <div id="c4-head"></div>
+  <div class="flex-1 overflow-y-auto scroll px-5 pt-6 pb-36">
+    <h1 class="text-headline-xl-mobile">Présentez-vous</h1>
+    <p class="text-body-md text-on-surface-variant mt-2">Ce texte s'affiche côté recruteur, sous votre stack technique.</p>
+    <div class="mt-5 rounded-[16px] bg-surface-container-low border border-outline-variant p-1">
+      <textarea class="w-full h-40 bg-transparent border-0 resize-none px-3 py-3 text-body-lg focus:ring-0" id="bio" maxlength="280" oninput="countBio()" placeholder="Développeur fullstack spécialisé en React et Node.js…"></textarea>
+      <div class="flex items-center justify-between px-3 pb-2"><span class="text-body-sm text-outline">280 caractères maximum</span><span class="text-label-md text-on-surface-variant" id="bio-count">0 / 280</span></div>
+    </div>
+    <p class="text-label-lg mt-6">Suggestions</p>
+    <div class="mt-2 space-y-2">
+      <button class="w-full text-left rounded-[16px] bg-surface-container-lowest border border-outline-variant p-3 text-body-md text-on-surface-variant hover:border-primary" onclick="setBio(this)">Développeur fullstack JavaScript, 3 ans d'expérience sur React et Node.js. Je cherche un CDI produit avec du télétravail hybride.</button>
+      <button class="w-full text-left rounded-[16px] bg-surface-container-lowest border border-outline-variant p-3 text-body-md text-on-surface-variant hover:border-primary" onclick="setBio(this)">Spécialisé en architecture frontend réactive et micro-services Node.js. Habitué aux migrations progressives et aux petites équipes produit.</button>
+    </div>
+  </div>
+  <div class="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-md px-5 pb-5 pt-4 bg-surface/95 backdrop-blur-md">
+    <button class="w-full h-14 btn-primary" onclick="go('sc-c5')">Continuer vers le CV</button>
+  </div>
+</section>
+
+<!-- ═══════════ CANDIDAT — ONBOARDING 5 : CV ═══════════ -->
+<section class="screen" id="sc-c5">
+  <div id="c5-head"></div>
+  <div class="flex-1 overflow-y-auto scroll px-5 pt-6 pb-36">
+    <h1 class="text-headline-xl-mobile">Ajoutez votre CV (PDF)</h1>
+    <p class="text-body-md text-on-surface-variant mt-2">Le fichier reste privé : seul un recruteur ayant matché avec vous peut l'ouvrir, via une route protégée.</p>
+    <button class="mt-5 w-full rounded-[24px] border-2 border-dashed border-outline-variant bg-surface-container-low px-4 py-10 grid place-items-center gap-2 hover:border-primary" id="cv-drop" onclick="uploadCv()">
+      <span class="material-symbols-outlined text-[38px] text-primary">upload_file</span>
+      <span class="text-label-lg">Choisir un fichier PDF</span>
+      <span class="text-body-sm text-outline">PDF uniquement · 5 Mo maximum</span>
+    </button>
+    <div class="mt-5 hidden" id="cv-file">
+      <div class="rounded-[20px] bg-surface-container-lowest border border-outline-variant p-4">
+        <div class="flex items-center gap-3">
+          <div class="w-11 h-11 rounded-[14px] bg-error-container text-on-error-container grid place-items-center shrink-0"><span class="material-symbols-outlined">picture_as_pdf</span></div>
+          <div class="min-w-0 flex-1"><p class="text-headline-sm truncate">CV_Alexandre_Moreau.pdf</p><p class="text-body-sm text-on-surface-variant">412 Ko · déposé à l'instant</p></div>
+          <button class="w-9 h-9 rounded-full grid place-items-center text-tertiary" onclick="removeCv()"><span class="material-symbols-outlined text-[20px]">delete</span></button>
+        </div>
+        <div class="mt-3 h-1.5 rounded-full bg-surface-container-highest overflow-hidden"><div class="h-full w-full bg-secondary rounded-full" id="cv-bar" style="transition:width .6s ease"></div></div>
+        <p class="mt-2 text-label-md text-secondary flex items-center gap-1"><span class="material-symbols-outlined text-[16px] fill">check_circle</span> Format et taille validés par le serveur</p>
+      </div>
+    </div>
+    <div class="mt-5 rounded-[16px] bg-surface-container-low border border-outline-variant p-4 space-y-2">
+      <p class="text-label-lg">Contrôles appliqués à l'envoi</p>
+      <p class="text-body-sm text-on-surface-variant flex gap-2"><span class="material-symbols-outlined text-[16px] text-primary">lock</span> Authentification exigée avant Multer.</p>
+      <p class="text-body-sm text-on-surface-variant flex gap-2"><span class="material-symbols-outlined text-[16px] text-primary">description</span> PDF uniquement (extension + type MIME).</p>
+      <p class="text-body-sm text-on-surface-variant flex gap-2"><span class="material-symbols-outlined text-[16px] text-primary">scale</span> 5 Mo maximum, un seul fichier.</p>
+      <p class="text-body-sm text-on-surface-variant flex gap-2"><span class="material-symbols-outlined text-[16px] text-primary">autorenew</span> Remplacement : l'ancien fichier est supprimé.</p>
+    </div>
+  </div>
+  <div class="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-md px-5 pb-5 pt-4 bg-surface/95 backdrop-blur-md space-y-2">
+    <button class="w-full h-14 btn-primary" onclick="finishCandidate()">Terminer mon profil</button>
+    <button class="w-full h-11 rounded-[20px] text-label-md text-on-surface-variant" onclick="finishCandidate()">Ajouter mon CV plus tard</button>
+  </div>
+</section>
+
+<!-- ═══════════ CANDIDAT — TABLEAU DE BORD ═══════════ -->
+<section class="screen" id="sc-cdash">
+  <header class="flex items-center justify-between px-5 h-16 shrink-0 sticky top-0 bg-surface/90 backdrop-blur-md z-30">
+    <div class="flex items-center gap-2">
+      <div class="w-9 h-9 rounded-full bg-primary-fixed text-primary grid place-items-center text-label-lg">AM</div>
+      <div><p class="text-label-sm text-outline">CANDIDAT</p><p class="text-label-lg leading-4" id="dash-name">Alexandre M.</p></div>
+    </div>
+    <p class="text-headline-md text-primary-container font-extrabold">JobSwipe</p>
+    <button class="w-10 h-10 rounded-full grid place-items-center text-on-surface-variant" onclick="logout()"><span class="material-symbols-outlined">logout</span></button>
+  </header>
+  <div class="flex-1 overflow-y-auto scroll px-5 pb-32">
+    <div class="rounded-[24px] bg-primary-container text-white p-5 shadow-lg shadow-primary-container/25">
+      <p class="text-label-sm opacity-80">PROFIL ENREGISTRÉ</p>
+      <p class="text-headline-md mt-1">Profil complet à 92 %</p>
+      <p class="text-body-md opacity-90 mt-1">Ajoutez une seconde formation pour atteindre 100 %.</p>
+      <div class="mt-3 h-2 rounded-full bg-white/25 overflow-hidden"><div class="h-full bg-secondary-fixed-dim rounded-full" style="width:92%"></div></div>
+      <button class="mt-4 h-11 px-5 rounded-full bg-white text-primary text-label-lg" onclick="go('sc-cprofile')">Voir mon profil</button>
+    </div>
+    <div class="mt-6 grid grid-cols-3 gap-3" id="c-stats"></div>
+    <button class="mt-5 w-full h-14 btn-primary flex items-center justify-center gap-2" onclick="go('sc-discover')"><span class="material-symbols-outlined">style</span> Découvrir les offres</button>
+    <h2 class="text-headline-md mt-6">Mes candidatures</h2>
+    <div class="mt-2 space-y-3" id="c-applications"></div>
+  </div>
+  <div class="h-24"></div>
+</section>
+
+<!-- ═══════════ CANDIDAT — DÉCOUVERTE (SWIPE) ═══════════ -->
+<section class="screen" id="sc-discover">
+  <header class="flex items-center justify-between px-5 h-16 shrink-0">
+    <button class="w-10 h-10 rounded-full grid place-items-center text-on-surface-variant" onclick="go('sc-cdash')"><span class="material-symbols-outlined">arrow_back</span></button>
+    <p class="text-headline-md text-primary-container font-extrabold">JobSwipe</p>
+    <button class="w-10 h-10 rounded-full grid place-items-center text-on-surface-variant" onclick="toast('Filtres : contrat, salaire, ville','tune')"><span class="material-symbols-outlined">tune</span></button>
+  </header>
+  <div class="px-5 flex gap-2 overflow-x-auto scroll pb-2 shrink-0" id="discover-filters"></div>
+  <div class="flex-1 px-5 relative" id="deck-zone"></div>
+  <div class="px-5 pb-4 flex items-center justify-around shrink-0">
+    <button class="w-[58px] h-[58px] rounded-full bg-white border-2 border-[#FFE4E6] text-tertiary-container shadow-lg grid place-items-center active:scale-90 transition" onclick="swipeOffer('pass')"><span class="material-symbols-outlined text-[30px]">close</span></button>
+    <button class="w-[50px] h-[50px] rounded-full bg-primary-container text-white shadow-lg grid place-items-center active:scale-90 transition" onclick="swipeOffer('super')"><span class="material-symbols-outlined text-[24px] fill">star</span></button>
+    <button class="w-[68px] h-[68px] rounded-full bg-secondary text-white shadow-xl grid place-items-center active:scale-90 transition ring-4 ring-secondary/15" onclick="swipeOffer('like')"><span class="material-symbols-outlined text-[34px] fill">favorite</span></button>
+  </div>
+  <div class="h-24"></div>
+</section>
+
+<!-- ═══════════ CANDIDAT — DÉTAIL OFFRE ═══════════ -->
+<section class="screen" id="sc-offer">
+  <header class="flex items-center gap-3 px-5 h-16 shrink-0 sticky top-0 bg-surface/90 backdrop-blur-md z-30">
+    <button class="w-10 h-10 rounded-full grid place-items-center text-on-surface-variant" onclick="go('sc-discover')"><span class="material-symbols-outlined">arrow_back</span></button>
+    <p class="text-headline-md flex-1">Détail de l'offre</p>
+  </header>
+  <div class="flex-1 overflow-y-auto scroll px-5 pb-32" id="offer-detail"></div>
+  <div class="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-md px-5 pb-5 pt-4 bg-surface/95 backdrop-blur-md flex gap-3">
+    <button class="flex-1 h-14 rounded-[20px] border border-outline-variant bg-white text-tertiary text-label-lg" onclick="swipeOffer('pass'); go('sc-discover')">Passer</button>
+    <button class="flex-1 h-14 btn-green" onclick="swipeOffer('like'); go('sc-discover')">Manifester mon intérêt</button>
+  </div>
+</section>
+
+<!-- ═══════════ CANDIDAT — MATCHS & CANDIDATURES ═══════════ -->
+<section class="screen" id="sc-cmatches">
+  <header class="flex items-center justify-between px-5 h-16 shrink-0 sticky top-0 bg-surface/90 backdrop-blur-md z-30">
+    <p class="text-headline-md">Mes matchs</p>
+    <span class="text-label-md px-3 py-1 rounded-full bg-secondary-container text-on-secondary-container" id="match-count">0</span>
+  </header>
+  <div class="flex-1 overflow-y-auto scroll px-5 pb-32">
+    <p class="text-body-md text-on-surface-variant">Une conversation s'ouvre uniquement quand le recruteur a validé votre intérêt.</p>
+    <div class="mt-4 space-y-3" id="c-matches"></div>
+    <h2 class="text-headline-md mt-6">En attente de décision</h2>
+    <div class="mt-2 space-y-3" id="c-pending"></div>
+  </div>
+  <div class="h-24"></div>
+</section>
+
+<!-- ═══════════ MESSAGERIE (partagée) ═══════════ -->
+<section class="screen" id="sc-chat">
+  <header class="flex items-center gap-3 px-4 h-16 shrink-0 border-b border-outline-variant/40 bg-surface">
+    <button class="w-10 h-10 rounded-full grid place-items-center text-on-surface-variant" onclick="backFromChat()"><span class="material-symbols-outlined">arrow_back</span></button>
+    <div class="w-10 h-10 rounded-full bg-primary-fixed text-primary grid place-items-center text-label-lg" id="chat-avatar">SM</div>
+    <div class="flex-1 min-w-0">
+      <p class="text-headline-sm truncate" id="chat-name">Sophie Martin</p>
+      <p class="text-body-sm text-secondary" id="chat-sub">En ligne</p>
+    </div>
+    <button class="w-10 h-10 rounded-full grid place-items-center text-on-surface-variant" onclick="toast('Signaler ou quitter la conversation','more_vert')"><span class="material-symbols-outlined">more_vert</span></button>
+  </header>
+  <div class="px-4 py-2 bg-surface-container-low flex items-center gap-2 shrink-0">
+    <span class="material-symbols-outlined text-primary text-[18px]">work</span>
+    <p class="text-body-sm flex-1 truncate" id="chat-offer">Offre liée</p>
+    <button class="text-label-md text-primary" onclick="toast('Ouverture de l\'offre liée','open_in_new')">Voir</button>
+  </div>
+  <div class="flex-1 overflow-y-auto scroll px-4 py-4 space-y-3" id="chat-body"></div>
+  <div class="px-3 py-3 border-t border-outline-variant/40 bg-surface flex items-center gap-2 shrink-0">
+    <input class="field flex-1" id="chat-input" onkeydown="if(event.key==='Enter')sendMsg()" placeholder="Écrivez votre message…"/>
+    <button class="w-12 h-12 rounded-full bg-primary-container text-white grid place-items-center shrink-0" onclick="sendMsg()"><span class="material-symbols-outlined">send</span></button>
+  </div>
+</section>
+
+<!-- ═══════════ CANDIDAT — PROFIL ═══════════ -->
+<section class="screen" id="sc-cprofile">
+  <header class="flex items-center gap-3 px-5 h-16 shrink-0 sticky top-0 bg-surface/90 backdrop-blur-md z-30">
+    <button class="w-10 h-10 rounded-full grid place-items-center text-on-surface-variant" onclick="go('sc-cdash')"><span class="material-symbols-outlined">arrow_back</span></button>
+    <p class="text-headline-md flex-1">Mon profil</p>
+    <button class="h-10 px-4 rounded-full bg-primary-fixed text-primary text-label-md flex items-center gap-1.5" onclick="go('sc-cedit')"><span class="material-symbols-outlined text-[18px]">edit</span> Modifier</button>
+  </header>
+  <div class="flex-1 overflow-y-auto scroll px-5 pb-32">
+    <div class="rounded-[28px] bg-surface-container-lowest border border-outline-variant overflow-hidden">
+      <div class="h-24 bg-primary-container"></div>
+      <div class="px-4 pb-4 -mt-10">
+        <div class="w-20 h-20 rounded-full bg-surface-container-high ring-4 ring-white grid place-items-center text-headline-md text-primary">AM</div>
+        <div class="mt-3 flex items-center gap-1.5"><h1 class="text-headline-xl-mobile" id="p-name">Alexandre Moreau</h1><span class="material-symbols-outlined text-primary text-[20px] fill">verified</span></div>
+        <p class="text-body-lg text-on-surface-variant" id="p-title">Développeur Fullstack · 1 à 3 ans</p>
+        <div class="mt-3 flex flex-wrap gap-2" id="p-meta"></div>
+      </div>
+    </div>
+    <h2 class="text-headline-md mt-6">Type d'offre recherché</h2>
+    <div class="mt-2 flex flex-wrap gap-2" id="p-contracts"></div>
+    <h2 class="text-headline-md mt-6">À propos</h2>
+    <p class="mt-2 text-body-lg text-on-surface-variant" id="p-bio">Développeur fullstack JavaScript. Je cherche un CDI produit avec du télétravail hybride.</p>
+    <div class="mt-6 flex items-baseline justify-between"><h2 class="text-headline-md">Compétences</h2><button class="text-label-md text-primary" onclick="go('sc-c2')">Gérer</button></div>
+    <div class="mt-2 flex flex-wrap gap-2" id="p-skills"></div>
+    <h2 class="text-headline-md mt-6">Formation</h2>
+    <div class="mt-2 rounded-[20px] bg-surface-container-lowest border border-outline-variant p-4 flex gap-3" id="p-education"></div>
+    <h2 class="text-headline-md mt-6">Langues</h2>
+    <div class="mt-2 rounded-[20px] bg-surface-container-lowest border border-outline-variant divide-y divide-outline-variant/40" id="p-langs"></div>
+    <h2 class="text-headline-md mt-6">CV</h2>
+    <div class="mt-2 rounded-[20px] bg-surface-container-lowest border border-outline-variant p-4 flex items-center gap-3">
+      <div class="w-11 h-11 rounded-[14px] bg-error-container text-on-error-container grid place-items-center shrink-0"><span class="material-symbols-outlined">picture_as_pdf</span></div>
+      <div class="flex-1 min-w-0"><p class="text-headline-sm truncate">CV_Alexandre_Moreau.pdf</p><p class="text-body-sm text-on-surface-variant">Privé · visible après un match</p></div>
+      <button class="h-10 px-4 rounded-full border border-outline-variant text-label-md text-primary" onclick="toast('Ouverture du CV protégé','open_in_new')">Ouvrir</button>
+    </div>
+    <h2 class="text-headline-md mt-6">Compte</h2>
+    <div class="mt-2 rounded-[20px] bg-surface-container-lowest border border-outline-variant divide-y divide-outline-variant/40 overflow-hidden">
+      <button class="w-full flex items-center gap-3 p-4 text-left" onclick="go('sc-cedit')"><span class="material-symbols-outlined text-on-surface-variant">edit_note</span><span class="flex-1 text-body-lg">Modifier mon profil</span><span class="material-symbols-outlined text-outline text-[20px]">chevron_right</span></button>
+      <button class="w-full flex items-center gap-3 p-4 text-left" onclick="toast('Export de vos données RGPD','download')"><span class="material-symbols-outlined text-on-surface-variant">shield</span><span class="flex-1 text-body-lg">Confidentialité et données</span><span class="material-symbols-outlined text-outline text-[20px]">chevron_right</span></button>
+      <button class="w-full flex items-center gap-3 p-4 text-left" onclick="openDelete('candidat')"><span class="material-symbols-outlined text-tertiary">delete_forever</span><span class="flex-1 text-body-lg text-tertiary">Supprimer mon profil</span><span class="material-symbols-outlined text-tertiary text-[20px]">chevron_right</span></button>
+    </div>
+  </div>
+  <div class="h-24"></div>
+</section>
+
+<!-- ═══════════ CANDIDAT — MODIFIER ═══════════ -->
+<section class="screen" id="sc-cedit">
+  <header class="flex items-center gap-3 px-5 h-16 shrink-0 sticky top-0 bg-surface/90 backdrop-blur-md z-30">
+    <button class="w-10 h-10 rounded-full grid place-items-center text-on-surface-variant" onclick="go('sc-cprofile')"><span class="material-symbols-outlined">close</span></button>
+    <p class="text-headline-md flex-1">Modifier le profil</p>
+    <button class="h-10 px-4 rounded-full bg-primary-container text-white text-label-md" onclick="saveProfile()">Enregistrer</button>
+  </header>
+  <div class="flex-1 overflow-y-auto scroll px-5 pb-32 space-y-5 pt-2">
+    <label class="block"><span class="text-label-lg">Titre recherché</span><input class="field mt-2" id="e-title" value="Développeur Fullstack"/></label>
+    <label class="block"><span class="text-label-lg">Localisation</span><input class="field mt-2" id="e-loc" value="Limoges"/></label>
+    <label class="block"><span class="text-label-lg">Description</span><textarea class="field mt-2 h-32 resize-none" id="e-bio">Développeur fullstack JavaScript. Je cherche un CDI produit avec du télétravail hybride.</textarea></label>
+    <div><span class="text-label-lg">Type d'offre recherché</span><div class="mt-2 flex flex-wrap gap-2" id="e-contracts"></div></div>
+    <div><div class="flex items-baseline justify-between"><span class="text-label-lg">Compétences</span><button class="text-label-md text-primary" onclick="go('sc-c2')">Ouvrir la liste</button></div><div class="mt-2 flex flex-wrap gap-2" id="e-skills"></div></div>
+    <div><div class="flex items-baseline justify-between"><span class="text-label-lg">Langues</span><button class="text-label-md text-primary" onclick="go('sc-c3')">Gérer</button></div><div class="mt-2 rounded-[20px] bg-surface-container-lowest border border-outline-variant divide-y divide-outline-variant/40" id="e-langs"></div></div>
+    <label class="block"><span class="text-label-lg">Niveau d'études</span><select class="field mt-2" id="e-degree" onchange="setDegree(this.value)"></select></label>
+    <div><span class="text-label-lg">CV</span>
+      <div class="mt-2 rounded-[20px] bg-surface-container-lowest border border-outline-variant p-4 flex items-center gap-3">
+        <div class="w-11 h-11 rounded-[14px] bg-error-container text-on-error-container grid place-items-center"><span class="material-symbols-outlined">picture_as_pdf</span></div>
+        <div class="flex-1 min-w-0"><p class="text-headline-sm truncate">CV_Alexandre_Moreau.pdf</p><p class="text-body-sm text-on-surface-variant">Le remplacement supprime l'ancien fichier.</p></div>
+        <button class="h-10 px-4 rounded-full border border-outline-variant text-label-md text-primary shrink-0" onclick="toast('Nouveau CV envoyé','autorenew')">Remplacer</button>
+      </div>
+    </div>
+    <button class="w-full h-12 rounded-[18px] border border-tertiary/40 text-tertiary text-label-lg flex items-center justify-center gap-2" onclick="openDelete('candidat')"><span class="material-symbols-outlined text-[20px]">delete_forever</span> Supprimer mon profil</button>
+  </div>
+  <div class="h-24"></div>
+</section>
+
+<!-- ═══════════ RECRUTEUR — ONBOARDING 1 : ENTREPRISE ═══════════ -->
+<section class="screen" id="sc-r1">
+  <div id="r1-head"></div>
+  <div class="flex-1 overflow-y-auto scroll px-5 pt-6 pb-36">
+    <h1 class="text-headline-xl-mobile">Rattachez votre compte à une entreprise</h1>
+    <p class="text-body-md text-on-surface-variant mt-2">Les entreprises sont référencées à l'avance. Vos offres seront publiées en son nom.</p>
+    <div class="mt-5 relative">
+      <span class="material-symbols-outlined absolute left-4 top-3.5 text-outline">search</span>
+      <input class="field pl-12" id="company-search" oninput="searchCompany()" placeholder="Nom ou SIREN de l'entreprise"/>
+    </div>
+    <div class="mt-4 space-y-2" id="company-results"></div>
+    <div class="mt-6 rounded-[20px] border border-dashed border-outline-variant p-4">
+      <p class="text-headline-sm">Votre entreprise n'apparaît pas ?</p>
+      <p class="text-body-sm text-on-surface-variant mt-1">Envoyez une demande de référencement : nom légal, SIREN et site web.</p>
+      <button class="mt-3 h-11 px-4 rounded-full border border-outline-variant text-label-md text-primary" onclick="toast('Demande de référencement envoyée','send')">Demander le référencement</button>
+    </div>
+  </div>
+  <div class="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-md px-5 pb-5 pt-4 bg-surface/95 backdrop-blur-md">
+    <button class="w-full h-14 btn-green disabled:opacity-40 disabled:shadow-none" disabled id="btn-r1" onclick="go('sc-r2')">Continuer</button>
+  </div>
+</section>
+
+<!-- ═══════════ RECRUTEUR — ONBOARDING 2 : FICHE ENTREPRISE ═══════════ -->
+<section class="screen" id="sc-r2">
+  <div id="r2-head"></div>
+  <div class="flex-1 overflow-y-auto scroll px-5 pt-6 pb-36">
+    <h1 class="text-headline-xl-mobile">Présentez l'entreprise</h1>
+    <p class="text-body-md text-on-surface-variant mt-2">Cette fiche apparaît en haut de chaque carte d'offre, avant le poste.</p>
+    <div class="mt-6 flex items-center gap-4">
+      <div class="w-20 h-20 rounded-[24px] bg-surface-container-high grid place-items-center text-primary relative">
+        <span class="material-symbols-outlined text-[32px]">add_photo_alternate</span>
+        <span class="absolute -bottom-1 -right-1 w-8 h-8 rounded-full bg-secondary text-white grid place-items-center shadow-lg"><span class="material-symbols-outlined text-[18px]">edit</span></span>
+      </div>
+      <div><p class="text-headline-sm">Logo de l'entreprise</p><p class="text-body-sm text-on-surface-variant">PNG ou SVG carré, 2 Mo maximum.</p></div>
+    </div>
+    <div class="mt-6 space-y-5">
+      <label class="block"><span class="text-label-lg">Nom affiché</span><input class="field mt-2" id="co-name" value="FinTech Nova"/></label>
+      <div class="grid grid-cols-2 gap-3">
+        <label class="block"><span class="text-label-lg">Secteur</span><select class="field mt-2 text-[14px]" id="co-sector"><option selected>Fintech</option><option>Santé</option><option>E-commerce</option><option>Industrie</option><option>Services IT</option><option>Éducation</option></select></label>
+        <label class="block"><span class="text-label-lg">Effectif</span><select class="field mt-2 text-[14px]" id="co-size"><option>1 à 10</option><option>11 à 50</option><option selected>51 à 250</option><option>250 et plus</option></select></label>
+      </div>
+      <label class="block"><span class="text-label-lg">Siège</span><input class="field mt-2" id="co-city" value="Paris 9e"/></label>
+      <label class="block"><span class="text-label-lg">Site web</span><input class="field mt-2" id="co-web" value="fintechnova.fr"/></label>
+      <div><span class="text-label-lg">Description de l'entreprise</span>
+        <div class="mt-2 rounded-[16px] bg-surface-container-low border border-outline-variant p-1">
+          <textarea class="w-full h-32 bg-transparent border-0 resize-none px-3 py-3 text-body-lg focus:ring-0" id="co-bio" maxlength="400" oninput="countCo()">Éditeur d'une suite bancaire nouvelle génération pour les PME. Équipe produit de 40 personnes, culture d'ingénierie orientée qualité et livraison continue.</textarea>
+          <div class="flex justify-end px-3 pb-2"><span class="text-label-md text-on-surface-variant" id="co-count">0 / 400</span></div>
+        </div>
+      </div>
+      <div><span class="text-label-lg">Avantages proposés</span><div class="mt-2 flex flex-wrap gap-2" id="perk-chips"></div></div>
+    </div>
+  </div>
+  <div class="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-md px-5 pb-5 pt-4 bg-surface/95 backdrop-blur-md">
+    <button class="w-full h-14 btn-green" onclick="go('sc-r3')">Continuer</button>
+  </div>
+</section>
+
+<!-- ═══════════ RECRUTEUR — ONBOARDING 3 : PROFIL ═══════════ -->
+<section class="screen" id="sc-r3">
+  <div id="r3-head"></div>
+  <div class="flex-1 overflow-y-auto scroll px-5 pt-6 pb-36">
+    <h1 class="text-headline-xl-mobile">Qui échangera avec les candidats ?</h1>
+    <p class="text-body-md text-on-surface-variant mt-2">Votre nom et votre fonction apparaissent en tête de conversation après chaque match.</p>
+    <div class="mt-6 flex items-center gap-4">
+      <div class="w-20 h-20 rounded-full bg-surface-container-high grid place-items-center text-secondary relative">
+        <span class="material-symbols-outlined text-[34px]">person</span>
+        <span class="absolute -bottom-1 -right-1 w-8 h-8 rounded-full bg-secondary text-white grid place-items-center shadow-lg"><span class="material-symbols-outlined text-[18px]">photo_camera</span></span>
+      </div>
+      <div><p class="text-headline-sm">Photo du recruteur</p><p class="text-body-sm text-on-surface-variant">Un visage augmente le taux de réponse.</p></div>
+    </div>
+    <div class="mt-6 space-y-5">
+      <label class="block"><span class="text-label-lg">Prénom et nom</span><input class="field mt-2" id="r-name" value="Sophie Martin"/></label>
+      <label class="block"><span class="text-label-lg">Fonction</span><input class="field mt-2" id="r-role" value="Responsable recrutement tech"/></label>
+      <label class="block"><span class="text-label-lg">Email professionnel</span><input class="field mt-2" value="sophie.martin@fintechnova.fr"/></label>
+      <div><span class="text-label-lg">Délai de réponse annoncé</span>
+        <div class="mt-2 flex flex-wrap gap-2" data-single>
+          <button class="chip px-4 py-2 rounded-full border text-label-md bg-secondary-container border-secondary text-on-secondary-container" onclick="pickOne(this,'green')">Moins d'1 h</button>
+          <button class="chip px-4 py-2 rounded-full border text-label-md bg-surface-container-low border-outline-variant text-on-surface-variant" onclick="pickOne(this,'green')">Sous 24 h</button>
+          <button class="chip px-4 py-2 rounded-full border text-label-md bg-surface-container-low border-outline-variant text-on-surface-variant" onclick="pickOne(this,'green')">Sous 48 h</button>
+        </div>
+      </div>
+      <div class="rounded-[16px] bg-surface-container-low border border-outline-variant p-4 flex gap-3">
+        <span class="material-symbols-outlined text-secondary">verified_user</span>
+        <p class="text-body-sm text-on-surface-variant">Rôle <strong>recruteur</strong> : publier et fermer vos offres, examiner uniquement les candidats intéressés par vos propres offres. Ces droits sont vérifiés côté serveur à chaque action.</p>
+      </div>
+    </div>
+  </div>
+  <div class="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-md px-5 pb-5 pt-4 bg-surface/95 backdrop-blur-md">
+    <button class="w-full h-14 btn-green" onclick="finishRecruiter()">Terminer et accéder à mon espace</button>
+  </div>
+</section>
+
+<!-- ═══════════ RECRUTEUR — TABLEAU DE BORD ═══════════ -->
+<section class="screen" id="sc-rdash">
+  <header class="flex items-center justify-between px-5 h-16 shrink-0 sticky top-0 bg-surface/90 backdrop-blur-md z-30">
+    <div class="flex items-center gap-2">
+      <div class="w-9 h-9 rounded-[12px] bg-secondary-container text-on-secondary-container grid place-items-center text-label-lg" id="rdash-initials">FN</div>
+      <div><p class="text-label-sm text-outline">RECRUTEUR</p><p class="text-label-lg leading-4" id="rdash-company">FinTech Nova</p></div>
+    </div>
+    <button class="w-10 h-10 rounded-full grid place-items-center text-on-surface-variant" onclick="logout()"><span class="material-symbols-outlined">logout</span></button>
+  </header>
+  <div class="flex-1 overflow-y-auto scroll px-5 pb-32">
+    <div class="grid grid-cols-3 gap-3" id="r-stats"></div>
+    <button class="mt-5 w-full h-14 btn-primary flex items-center justify-center gap-2" onclick="openNewOffer()"><span class="material-symbols-outlined">post_add</span> Publier une offre</button>
+    <div class="mt-6 flex items-baseline justify-between"><h2 class="text-headline-md">Mes offres</h2><span class="text-body-sm text-on-surface-variant" id="r-offer-count"></span></div>
+    <div class="mt-2 space-y-3" id="r-offers"></div>
+  </div>
+  <div class="h-24"></div>
+</section>
+
+<!-- ═══════════ RECRUTEUR — PUBLIER UNE OFFRE ═══════════ -->
+<section class="screen" id="sc-newoffer">
+  <header class="flex items-center gap-3 px-5 h-16 shrink-0 sticky top-0 bg-surface/90 backdrop-blur-md z-30">
+    <button class="w-10 h-10 rounded-full grid place-items-center text-on-surface-variant" onclick="go('sc-rdash')"><span class="material-symbols-outlined">close</span></button>
+    <p class="text-headline-md flex-1">Nouvelle offre</p>
+    <span class="text-label-md px-3 py-1 rounded-full bg-surface-container-high text-on-surface-variant">Brouillon</span>
+  </header>
+  <div class="flex-1 overflow-y-auto scroll px-5 pb-36 space-y-5 pt-2">
+    <label class="block"><span class="text-label-lg">Intitulé du poste</span><input class="field mt-2" id="o-title" placeholder="Développeur Fullstack Senior"/></label>
+    <div>
+      <span class="text-label-lg">Type de contrat</span>
+      <div class="mt-2 flex flex-wrap gap-2" id="o-contract"></div>
+    </div>
+    <div class="grid grid-cols-2 gap-3">
+      <label class="block"><span class="text-label-lg">Ville</span><input class="field mt-2 text-[14px]" id="o-city" value="Paris"/></label>
+      <label class="block"><span class="text-label-lg">Télétravail</span><select class="field mt-2 text-[14px]" id="o-remote"><option>Sur site</option><option selected>Hybride</option><option>Full remote</option></select></label>
+    </div>
+    <div class="grid grid-cols-2 gap-3">
+      <label class="block"><span class="text-label-lg">Salaire min. (k€)</span><input class="field mt-2 text-[14px]" id="o-min" value="55"/></label>
+      <label class="block"><span class="text-label-lg">Salaire max. (k€)</span><input class="field mt-2 text-[14px]" id="o-max" value="65"/></label>
+    </div>
+    <label class="block"><span class="text-label-lg">Niveau d'études minimum</span><select class="field mt-2" id="o-degree"></select></label>
+    <div>
+      <span class="text-label-lg">Langues attendues</span>
+      <div class="mt-2 space-y-2" id="o-langs"></div>
+    </div>
+    <div>
+      <div class="flex items-baseline justify-between"><span class="text-label-lg">Compétences requises</span><span class="text-body-sm text-outline" id="o-skill-count">0 sélectionnée</span></div>
+      <div class="mt-2 -mx-5 px-5 flex gap-2 overflow-x-auto scroll pb-1" id="o-cat-bar"></div>
+      <div class="mt-3" id="o-skill-groups"></div>
+    </div>
+    <label class="block"><span class="text-label-lg">Missions et description</span>
+      <textarea class="field mt-2 h-36 resize-none" id="o-desc" placeholder="Pilotage de la refonte applicative, encadrement d'un squad de 3 développeurs…">Renfort de l'équipe plateforme : refonte de l'API de paiement, mise en place des tests end-to-end et accompagnement de deux développeurs juniors.</textarea>
+    </label>
+    <div class="rounded-[16px] bg-surface-container-low border border-outline-variant p-4 flex gap-3">
+      <span class="material-symbols-outlined text-primary">info</span>
+      <p class="text-body-sm text-on-surface-variant">Une fois publiée, l'offre devient visible des candidats et peut recevoir des intérêts. Vous pourrez la fermer à tout moment ; les matchs existants sont conservés.</p>
+    </div>
+  </div>
+  <div class="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-md px-5 pb-5 pt-4 bg-surface/95 backdrop-blur-md flex gap-3">
+    <button class="flex-1 h-14 rounded-[20px] border border-outline-variant bg-white text-label-lg text-on-surface-variant" onclick="go('sc-rdash')">Annuler</button>
+    <button class="flex-[2] h-14 btn-primary" onclick="publishOffer()">Publier l'offre</button>
+  </div>
+</section>
+
+<!-- ═══════════ RECRUTEUR — DÉTAIL OFFRE ═══════════ -->
+<section class="screen" id="sc-roffer">
+  <header class="flex items-center gap-3 px-5 h-16 shrink-0 sticky top-0 bg-surface/90 backdrop-blur-md z-30">
+    <button class="w-10 h-10 rounded-full grid place-items-center text-on-surface-variant" onclick="go('sc-rdash')"><span class="material-symbols-outlined">arrow_back</span></button>
+    <p class="text-headline-md flex-1">Mon offre</p>
+  </header>
+  <div class="flex-1 overflow-y-auto scroll px-5 pb-32" id="roffer-detail"></div>
+  <div class="h-24"></div>
+</section>
+
+<!-- ═══════════ RECRUTEUR — FILE DES CANDIDATS INTÉRESSÉS ═══════════ -->
+<section class="screen" id="sc-rqueue">
+  <header class="flex items-center gap-3 px-5 h-16 shrink-0">
+    <button class="w-10 h-10 rounded-full grid place-items-center text-on-surface-variant" onclick="go('sc-roffer')"><span class="material-symbols-outlined">arrow_back</span></button>
+    <div class="flex-1 min-w-0"><p class="text-label-sm text-outline">CANDIDATS INTÉRESSÉS</p><p class="text-label-lg truncate" id="queue-offer">—</p></div>
+    <span class="text-label-md px-3 py-1 rounded-full bg-primary-fixed text-primary" id="queue-left">0</span>
+  </header>
+  <div class="flex-1 px-5 relative" id="cand-zone"></div>
+  <div class="px-5 pb-4 flex items-center justify-around shrink-0">
+    <button class="w-[58px] h-[58px] rounded-full bg-white border-2 border-[#FFE4E6] text-tertiary-container shadow-lg grid place-items-center active:scale-90 transition" onclick="decideCandidate('refuse')"><span class="material-symbols-outlined text-[30px]">close</span></button>
+    <button class="w-[50px] h-[50px] rounded-full bg-primary-container text-white shadow-lg grid place-items-center active:scale-90 transition" onclick="toast('Profil mis de côté pour plus tard','bookmark')"><span class="material-symbols-outlined text-[24px] fill">bookmark</span></button>
+    <button class="w-[68px] h-[68px] rounded-full bg-secondary text-white shadow-xl grid place-items-center active:scale-90 transition ring-4 ring-secondary/15" onclick="decideCandidate('accept')"><span class="material-symbols-outlined text-[34px] fill">favorite</span></button>
+  </div>
+  <p class="text-center text-body-sm text-outline pb-4">Accepter un candidat intéressé crée le match et ouvre la conversation.</p>
+  <div class="h-24"></div>
+</section>
+
+<!-- ═══════════ RECRUTEUR — MATCHS ═══════════ -->
+<section class="screen" id="sc-rmatches">
+  <header class="flex items-center justify-between px-5 h-16 shrink-0 sticky top-0 bg-surface/90 backdrop-blur-md z-30">
+    <p class="text-headline-md">Matchs</p>
+    <span class="text-label-md px-3 py-1 rounded-full bg-secondary-container text-on-secondary-container" id="rmatch-count">0</span>
+  </header>
+  <div class="flex-1 overflow-y-auto scroll px-5 pb-32">
+    <p class="text-body-md text-on-surface-variant">Conversations ouvertes après acceptation réciproque.</p>
+    <div class="mt-4 space-y-3" id="r-matches"></div>
+  </div>
+  <div class="h-24"></div>
+</section>
+
+<!-- ═══════════ RECRUTEUR — FICHE ENTREPRISE ═══════════ -->
+<section class="screen" id="sc-rprofile">
+  <header class="flex items-center gap-3 px-5 h-16 shrink-0 sticky top-0 bg-surface/90 backdrop-blur-md z-30">
+    <p class="text-headline-md flex-1">Entreprise</p>
+    <button class="h-10 px-4 rounded-full bg-secondary-container text-on-secondary-container text-label-md flex items-center gap-1.5" onclick="go('sc-r2')"><span class="material-symbols-outlined text-[18px]">edit</span> Modifier</button>
+  </header>
+  <div class="flex-1 overflow-y-auto scroll px-5 pb-32">
+    <div class="rounded-[28px] bg-surface-container-lowest border border-outline-variant overflow-hidden">
+      <div class="h-24 bg-secondary"></div>
+      <div class="px-4 pb-4 -mt-10">
+        <div class="w-20 h-20 rounded-[24px] bg-white ring-4 ring-white grid place-items-center text-headline-md text-secondary border border-outline-variant" id="rp-initials">FN</div>
+        <div class="mt-3 flex items-center gap-1.5"><h1 class="text-headline-xl-mobile" id="rp-name">FinTech Nova</h1><span class="material-symbols-outlined text-secondary text-[20px] fill">verified</span></div>
+        <p class="text-body-lg text-on-surface-variant" id="rp-meta">Fintech · 51 à 250 personnes · Paris 9e</p>
+      </div>
+    </div>
+    <h2 class="text-headline-md mt-6">À propos</h2>
+    <p class="mt-2 text-body-lg text-on-surface-variant" id="rp-bio"></p>
+    <h2 class="text-headline-md mt-6">Avantages</h2>
+    <div class="mt-2 flex flex-wrap gap-2" id="rp-perks"></div>
+    <h2 class="text-headline-md mt-6">Recruteur rattaché</h2>
+    <div class="mt-2 rounded-[20px] bg-surface-container-lowest border border-outline-variant p-4 flex items-center gap-3">
+      <div class="w-12 h-12 rounded-full bg-surface-container-high text-secondary grid place-items-center"><span class="material-symbols-outlined">person</span></div>
+      <div class="flex-1"><p class="text-headline-sm" id="rp-rname">Sophie Martin</p><p class="text-body-md text-on-surface-variant" id="rp-rrole">Responsable recrutement tech</p></div>
+      <button class="w-10 h-10 rounded-full grid place-items-center text-primary" onclick="go('sc-r3')"><span class="material-symbols-outlined text-[20px]">edit</span></button>
+    </div>
+    <h2 class="text-headline-md mt-6">Compte</h2>
+    <div class="mt-2 rounded-[20px] bg-surface-container-lowest border border-outline-variant divide-y divide-outline-variant/40 overflow-hidden">
+      <button class="w-full flex items-center gap-3 p-4 text-left" onclick="go('sc-r2')"><span class="material-symbols-outlined text-on-surface-variant">edit_note</span><span class="flex-1 text-body-lg">Modifier la fiche entreprise</span><span class="material-symbols-outlined text-outline text-[20px]">chevron_right</span></button>
+      <button class="w-full flex items-center gap-3 p-4 text-left" onclick="toast('Invitation envoyée à un collègue','group_add')"><span class="material-symbols-outlined text-on-surface-variant">group_add</span><span class="flex-1 text-body-lg">Inviter un autre recruteur</span><span class="material-symbols-outlined text-outline text-[20px]">chevron_right</span></button>
+      <button class="w-full flex items-center gap-3 p-4 text-left" onclick="openDelete('entreprise')"><span class="material-symbols-outlined text-tertiary">delete_forever</span><span class="flex-1 text-body-lg text-tertiary">Supprimer le compte recruteur</span><span class="material-symbols-outlined text-tertiary text-[20px]">chevron_right</span></button>
+    </div>
+  </div>
+  <div class="h-24"></div>
+</section>
+
+<!-- ═══════════ NAVIGATION BASSE ═══════════ -->
+<nav class="hidden fixed bottom-4 left-4 right-4 max-w-md mx-auto rounded-[36px] z-40 bg-white/95 backdrop-blur-lg ring-1 ring-outline-variant/30 shadow-xl shadow-on-surface/10 py-2.5 px-3 justify-around items-center" id="bottom-nav"></nav>
+
+<!-- ═══════════ MODALE MATCH ═══════════ -->
+<div class="hidden fixed inset-0 z-50 items-center justify-center px-6" id="match-modal">
+  <div class="absolute inset-0 bg-[rgba(15,23,42,.65)] backdrop-blur-sm" onclick="closeMatch()"></div>
+  <div class="relative w-full rounded-[32px] bg-white p-6 text-center shadow-2xl">
+    <div class="w-20 h-20 rounded-full bg-secondary-container mx-auto grid place-items-center"><span class="material-symbols-outlined text-[36px] text-secondary fill">handshake</span></div>
+    <h2 class="text-headline-xl-mobile mt-4">C'est un match</h2>
+    <p class="text-body-lg text-on-surface-variant mt-2" id="match-text"></p>
+    <button class="mt-5 w-full h-13 py-3.5 btn-primary" onclick="openChatFromMatch()">Démarrer la conversation</button>
+    <button class="mt-2 w-full py-3 text-label-lg text-on-surface-variant" onclick="closeMatch()">Continuer à parcourir</button>
+  </div>
+</div>
+
+<!-- ═══════════ MODALE SUPPRESSION ═══════════ -->
+<div class="hidden fixed inset-0 z-50 items-end justify-center" id="delete-modal">
+  <div class="absolute inset-0 bg-[rgba(15,23,42,.65)] backdrop-blur-sm" onclick="closeDelete()"></div>
+  <div class="relative w-full max-w-md bg-white rounded-t-[32px] p-6 pb-8 shadow-2xl">
+    <div class="w-12 h-1.5 rounded-full bg-outline-variant mx-auto mb-5"></div>
+    <div class="w-14 h-14 rounded-full bg-error-container text-on-error-container grid place-items-center"><span class="material-symbols-outlined text-[28px]">delete_forever</span></div>
+    <h2 class="text-headline-xl-mobile mt-4" id="del-title"></h2>
+    <p class="text-body-lg text-on-surface-variant mt-2">Cette action est définitive. Seront effacés :</p>
+    <ul class="mt-3 space-y-1.5 text-body-md text-on-surface-variant" id="del-list"></ul>
+    <label class="mt-5 block"><span class="text-label-md text-on-surface-variant">Écrivez SUPPRIMER pour confirmer</span>
+      <input class="field mt-2 tracking-wide" id="confirm-input" oninput="checkConfirm()" placeholder="SUPPRIMER"/>
+    </label>
+    <button class="mt-4 w-full py-3.5 rounded-[20px] bg-tertiary text-white text-label-lg disabled:opacity-40" disabled id="confirm-btn" onclick="doDelete()">Supprimer définitivement</button>
+    <button class="mt-2 w-full py-3 text-label-lg text-on-surface-variant" onclick="closeDelete()">Annuler</button>
+  </div>
+</div>
+
+<div class="fixed top-20 left-1/2 -translate-x-1/2 z-[60] bg-inverse-surface text-inverse-on-surface px-4 py-2.5 rounded-full text-label-md shadow-2xl flex items-center gap-2 opacity-0 scale-90 pointer-events-none transition-all duration-300" id="toast">
+  <span class="material-symbols-outlined text-[18px]" id="toast-icon">check</span><span id="toast-text"></span>
+</div>
+
+</div>
+
+<script>
+/* ═══════════ DONNÉES ═══════════ */
+const SKILLS = {
+  front:  { label:"Frontend", icon:"web", items:["React.js","Next.js","TypeScript","Vue.js","JavaScript ES6+","HTML / CSS","Tailwind CSS","Redux","Accessibilité web"] },
+  back:   { label:"Backend", icon:"dns", items:["Node.js","Express.js","API REST","Socket.IO","NestJS","Python / Django","PHP / Laravel","Java / Spring","JWT / bcrypt"] },
+  data:   { label:"Bases de données", icon:"database", items:["MongoDB","Mongoose","PostgreSQL","MySQL","Redis","SQL","Modélisation de données"] },
+  reseau: { label:"Réseau & Infra", icon:"lan", items:["Docker","Kubernetes","Linux","Nginx","AWS","CI/CD","TCP/IP","Cybersécurité","Supervision"] },
+  outils: { label:"Outils", icon:"handyman", items:["Git / GitHub","Figma","Jira","Postman","Tests unitaires","Méthode Agile"] }
+};
+const CONTRACTS = ["CDI","CDD","Alternance","Stage","Freelance","Temps partiel"];
+const DEGREES = ["Sans diplôme","CAP / BEP","Bac","Bac +2 (BTS / DUT)","Bac +3 (Licence)","Bac +5 (Master / Ingénieur)","Doctorat"];
+const LEVELS = ["A1 — Débutant","A2 — Élémentaire","B1 — Intermédiaire","B2 — Avancé","C1 — Autonome","C2 — Maîtrise","Langue maternelle"];
+const PERKS = ["Télétravail","Tickets restaurant","Mutuelle famille","RTT","Intéressement","Budget formation","Matériel au choix","Congés illimités"];
+const COMPANIES = [
+  {n:"FinTech Nova",s:"Fintech · Paris 9e",e:"51 à 250 personnes",i:"FN"},
+  {n:"Doctolib",s:"Santé · Levallois",e:"250 et plus",i:"D"},
+  {n:"Qonto",s:"Fintech · Paris 2e",e:"250 et plus",i:"Q"},
+  {n:"Swile",s:"RH · Montpellier",e:"250 et plus",i:"S"},
+  {n:"Legrand",s:"Industrie · Limoges",e:"250 et plus",i:"L"}
+];
+
+/* offres visibles côté candidat */
+let OFFERS = [
+  { id:1, title:"Développeur Fullstack Senior", co:"FinTech Nova", i:"FN", city:"Paris", remote:"Hybride", contract:"CDI", min:55, max:65, degree:"Bac +5 (Master / Ingénieur)",
+    skills:["React.js","Node.js","MongoDB","Docker","TypeScript"], langs:[{name:"Français",level:"C2 — Maîtrise"},{name:"Anglais",level:"B2 — Avancé"}],
+    desc:"Renfort de l'équipe plateforme : refonte de l'API de paiement, mise en place des tests end-to-end et accompagnement de deux développeurs juniors.", match:94, posted:"il y a 4 h", recruiter:"Sophie Martin" },
+  { id:2, title:"Développeur React / Next.js", co:"Qonto", i:"Q", city:"Paris 2e", remote:"Full remote", contract:"CDI", min:50, max:60, degree:"Bac +3 (Licence)",
+    skills:["React.js","Next.js","TypeScript","Tests unitaires"], langs:[{name:"Français",level:"C1 — Autonome"}],
+    desc:"Développement du portail client : design system partagé, performance et accessibilité sur l'ensemble des parcours.", match:88, posted:"hier", recruiter:"Karim Belattar" },
+  { id:3, title:"Ingénieur DevOps", co:"Legrand", i:"L", city:"Limoges", remote:"Hybride", contract:"CDI", min:45, max:55, degree:"Bac +5 (Master / Ingénieur)",
+    skills:["Docker","Kubernetes","Linux","CI/CD","AWS"], langs:[{name:"Français",level:"C2 — Maîtrise"},{name:"Anglais",level:"B1 — Intermédiaire"}],
+    desc:"Industrialisation des déploiements applicatifs : pipelines CI/CD, supervision et durcissement des environnements.", match:81, posted:"il y a 2 j", recruiter:"Claire Dubois" },
+  { id:4, title:"Alternant Développeur Web", co:"Swile", i:"S", city:"Montpellier", remote:"Hybride", contract:"Alternance", min:22, max:26, degree:"Bac +3 (Licence)",
+    skills:["JavaScript ES6+","Node.js","SQL","Git / GitHub"], langs:[{name:"Français",level:"C2 — Maîtrise"}],
+    desc:"Participation au développement des applications internes aux côtés d'un tuteur, rythme 3 semaines / 1 semaine.", match:76, posted:"il y a 3 j", recruiter:"Léa Fontaine" }
+];
+
+/* offres du recruteur */
+let MY_OFFERS = [
+  { id:101, title:"Développeur Fullstack Senior", contract:"CDI", city:"Paris", remote:"Hybride", min:55, max:65, status:"published",
+    skills:["React.js","Node.js","MongoDB","Docker"], degree:"Bac +5 (Master / Ingénieur)", desc:"Renfort de l'équipe plateforme.", interested:3, matches:1 }
+];
+
+/* candidats intéressés par une offre du recruteur */
+let CANDIDATES = [
+  { id:1, name:"Thomas Laurent", age:29, title:"Développeur Fullstack Senior", exp:"6 ans", city:"Lyon / Remote", salary:"55–60 k€", avail:"Immédiate",
+    degree:"Bac +5 (Master / Ingénieur)", school:"INSA Lyon · 2019",
+    skills:["TypeScript","Next.js","PostgreSQL","Docker","AWS"], langs:[{name:"Français",level:"Langue maternelle"},{name:"Anglais",level:"C1 — Autonome"}],
+    bio:"Spécialisé dans l'architecture frontend réactive et les micro-services Node.js. Pilotage de migrations progressives.", match:94 },
+  { id:2, name:"Inès Bouchard", age:26, title:"Développeuse Fullstack", exp:"3 ans", city:"Paris", salary:"48–54 k€", avail:"Sous 1 mois",
+    degree:"Bac +5 (Master / Ingénieur)", school:"Epitech · 2022",
+    skills:["React.js","Node.js","MongoDB","Tests unitaires"], langs:[{name:"Français",level:"Langue maternelle"},{name:"Anglais",level:"B2 — Avancé"},{name:"Espagnol",level:"B1 — Intermédiaire"}],
+    bio:"Produit et qualité : je travaille au plus près des utilisateurs et j'automatise ce qui peut l'être.", match:89 },
+  { id:3, name:"Mehdi Traoré", age:32, title:"Lead Backend", exp:"8 ans", city:"Bordeaux / Hybride", salary:"60–68 k€", avail:"Sous 3 mois",
+    degree:"Bac +5 (Master / Ingénieur)", school:"ENSEIRB · 2016",
+    skills:["Node.js","Express.js","PostgreSQL","Kubernetes","CI/CD"], langs:[{name:"Français",level:"Langue maternelle"},{name:"Anglais",level:"C2 — Maîtrise"}],
+    bio:"Backend distribué et fiabilité. J'aime documenter, mesurer, et rendre les équipes autonomes.", match:85 }
+];
+
+/* état */
+const S = {
+  role: 'candidat',
+  skills: new Set(["React.js","Node.js","MongoDB","Docker"]),
+  contracts: new Set(["CDI","Alternance"]),
+  perks: new Set(["Télétravail","Tickets restaurant","Budget formation"]),
+  degree: "Bac +5 (Master / Ingénieur)",
+  langs: [{name:"Français",level:"Langue maternelle"},{name:"Anglais",level:"B2 — Avancé"}],
+  offerSkills: new Set(["React.js","Node.js","MongoDB"]),
+  offerLangs: [{name:"Français",level:"C1 — Autonome"},{name:"Anglais",level:"B2 — Avancé"}],
+  deckIndex: 0, queueIndex: 0, currentOffer: null, currentQueueOffer: null,
+  interests: [], cMatches: [], rMatches: [],
+  chat: null, chatFrom: 'sc-cmatches',
+  company: COMPANIES[0], recruiter: { name:"Sophie Martin", role:"Responsable recrutement tech" },
+  delTarget: 'candidat', pendingMatch: null
+};
+
+/* ═══════════ NAVIGATION ═══════════ */
+const NAVS = {
+  candidat: [
+    { t:"Découvrir", i:"style", s:"sc-discover" },
+    { t:"Matchs", i:"chat_bubble", s:"sc-cmatches" },
+    { t:"Tableau", i:"dashboard", s:"sc-cdash" },
+    { t:"Profil", i:"person", s:"sc-cprofile" }
+  ],
+  recruteur: [
+    { t:"Offres", i:"work", s:"sc-rdash" },
+    { t:"Candidats", i:"group", s:"sc-rqueue" },
+    { t:"Matchs", i:"chat_bubble", s:"sc-rmatches" },
+    { t:"Entreprise", i:"apartment", s:"sc-rprofile" }
+  ]
+};
+const NAV_SCREENS = ["sc-discover","sc-cmatches","sc-cdash","sc-cprofile","sc-rdash","sc-rqueue","sc-rmatches","sc-rprofile"];
+
+function go(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  const el = document.getElementById(id);
+  el.classList.add('active');
+  if (id === 'sc-discover') renderDeck();
+  if (id === 'sc-cdash') renderCandidateDash();
+  if (id === 'sc-cmatches') renderCandidateMatches();
+  if (id === 'sc-cprofile') renderProfile();
+  if (id === 'sc-rdash') renderRecruiterDash();
+  if (id === 'sc-rmatches') renderRecruiterMatches();
+  if (id === 'sc-rprofile') renderCompanyProfile();
+  if (id === 'sc-rqueue') { if (!S.currentQueueOffer) S.currentQueueOffer = MY_OFFERS[0]; renderQueue(); }
+  renderNav(id);
+  window.scrollTo(0,0);
+}
+function renderNav(id) {
+  const nav = document.getElementById('bottom-nav');
+  const show = NAV_SCREENS.includes(id);
+  nav.classList.toggle('hidden', !show); nav.classList.toggle('flex', show);
+  if (!show) return;
+  const tone = S.role === 'candidat' ? 'text-primary' : 'text-secondary';
+  nav.innerHTML = NAVS[S.role].map(t => `
+    <button class="flex flex-col items-center gap-0.5 px-3 py-1 ${t.s === id ? tone : 'text-on-surface-variant'}" onclick="go('${t.s}')">
+      <span class="material-symbols-outlined text-[24px] ${t.s === id ? 'fill' : ''}">${t.i}</span>
+      <span class="text-label-sm">${t.t}</span>
+    </button>`).join('');
+}
+function stepHeader(target, step, total, label, back, tone) {
+  document.getElementById(target).innerHTML = `
+    <header class="flex items-center gap-3 px-5 h-16 shrink-0">
+      <button class="w-10 h-10 rounded-full grid place-items-center text-on-surface-variant" onclick="go('${back}')"><span class="material-symbols-outlined">arrow_back</span></button>
+      <div class="flex-1"><p class="text-label-sm text-outline">ÉTAPE ${step} SUR ${total}</p><p class="text-label-lg">${label}</p></div>
+    </header>
+    <div class="px-5"><div class="h-1.5 rounded-full bg-surface-container-highest overflow-hidden"><div class="h-full rounded-full" style="width:${step/total*100}%;background:${tone}"></div></div></div>`;
+}
+
+/* ═══════════ AUTH ═══════════ */
+function authTab(t) {
+  document.querySelectorAll('#auth-tabs button').forEach(b => {
+    const on = b.dataset.tab === t;
+    b.className = "flex-1 h-11 rounded-full text-label-lg " + (on ? "bg-surface-container-lowest text-primary shadow-sm" : "text-on-surface-variant");
+  });
+  S.authMode = t;
+  document.getElementById('auth-submit').textContent = t === 'login' ? "Se connecter" : "Créer mon compte";
+}
+function pickRole(r) {
+  S.role = r;
+  document.querySelectorAll('[data-role]').forEach(b => {
+    const on = b.dataset.role === r;
+    b.className = "chip rounded-[20px] p-4 text-left " + (on ? "border-2 border-primary bg-primary-fixed" : "border border-outline-variant bg-surface-container-lowest");
+    b.querySelector('span').className = "material-symbols-outlined " + (on ? "text-primary" : "text-on-surface-variant");
+    b.querySelector('p').className = "text-label-lg mt-1 " + (on ? "text-primary" : "");
+  });
+}
+function submitAuth() {
+  if (S.authMode === 'signup' || !S.onboarded) {
+    go(S.role === 'candidat' ? 'sc-c1' : 'sc-r1');
+    toast("Compte créé — complétez votre profil", 'person_add');
+  } else {
+    go(S.role === 'candidat' ? 'sc-cdash' : 'sc-rdash');
+  }
+}
+function logout() { go('sc-landing'); toast('Déconnecté', 'logout'); }
+
+/* ═══════════ COMPÉTENCES ═══════════ */
+function buildSkillPicker(catBarId, groupsId, set, onChange, prefix) {
+  document.getElementById(catBarId).innerHTML =
+    `<button class="chip ${prefix}cat shrink-0 px-4 py-2 rounded-full text-label-md border bg-primary-container border-primary-container text-white" data-c="all" onclick="filterCat('${prefix}','all',this)">Toutes</button>` +
+    Object.entries(SKILLS).map(([k,g]) => `<button class="chip ${prefix}cat shrink-0 px-4 py-2 rounded-full text-label-md border bg-surface-container-low border-outline-variant text-on-surface-variant" data-c="${k}" onclick="filterCat('${prefix}','${k}',this)">${g.label}</button>`).join('');
+  document.getElementById(groupsId).innerHTML = Object.entries(SKILLS).map(([k,g]) => `
+    <div class="${prefix}group mb-6" data-g="${k}">
+      <div class="flex items-center gap-2"><span class="material-symbols-outlined text-[18px] text-primary">${g.icon}</span><h2 class="text-headline-sm">${g.label}</h2><span class="text-body-sm text-outline">${g.items.length} choix</span></div>
+      <div class="mt-2 flex flex-wrap gap-2">${g.items.map(s => `<button class="chip ${prefix}chip px-3.5 py-2 rounded-full border text-label-md" data-s="${s}" onclick="${onChange}('${s.replace(/'/g,"\\'")}')">${s}</button>`).join('')}</div>
+    </div>`).join('');
+}
+function filterCat(prefix, c, btn) {
+  document.querySelectorAll('.' + prefix + 'cat').forEach(b => b.className = `chip ${prefix}cat shrink-0 px-4 py-2 rounded-full text-label-md border bg-surface-container-low border-outline-variant text-on-surface-variant`);
+  btn.className = `chip ${prefix}cat shrink-0 px-4 py-2 rounded-full text-label-md border bg-primary-container border-primary-container text-white`;
+  document.querySelectorAll('.' + prefix + 'group').forEach(g => g.style.display = (c === 'all' || g.dataset.g === c) ? '' : 'none');
+}
+function paintChipSet(cls, set) {
+  document.querySelectorAll('.' + cls).forEach(c => {
+    const on = set.has(c.dataset.s);
+    c.className = `chip ${cls} px-3.5 py-2 rounded-full border text-label-md ` + (on ? "bg-primary-fixed border-primary text-primary" : "bg-surface-container-low border-outline-variant text-on-surface-variant");
+  });
+}
+function toggleSkill(s) { S.skills.has(s) ? S.skills.delete(s) : S.skills.add(s); paintSkills(); }
+function paintSkills() {
+  paintChipSet('cchip', S.skills);
+  const n = S.skills.size;
+  document.getElementById('btn-c2').disabled = n < 3;
+  document.getElementById('skill-preview').innerHTML = n === 0
+    ? '<span class="text-body-sm text-outline">Sélectionnez au moins 3 compétences.</span>'
+    : [...S.skills].map(s => `<span class="text-label-md px-3 py-1.5 rounded-full bg-primary-fixed text-primary flex items-center gap-1">${s}<span class="material-symbols-outlined text-[14px] cursor-pointer" onclick="toggleSkill('${s.replace(/'/g,"\\'")}')">close</span></span>`).join('');
+}
+function toggleOfferSkill(s) { S.offerSkills.has(s) ? S.offerSkills.delete(s) : S.offerSkills.add(s); paintOfferSkills(); }
+function paintOfferSkills() {
+  paintChipSet('ochip', S.offerSkills);
+  document.getElementById('o-skill-count').textContent = S.offerSkills.size + (S.offerSkills.size > 1 ? " sélectionnées" : " sélectionnée");
+}
+
+/* ═══════════ CONTRATS / DIPLÔMES / LANGUES ═══════════ */
+function buildContracts() {
+  const h = CONTRACTS.map(c => `<button class="chip ct px-4 py-2 rounded-full border text-label-md" data-c="${c}" onclick="toggleContract('${c}')">${c}</button>`).join('');
+  document.getElementById('contract-chips').innerHTML = h;
+  document.getElementById('e-contracts').innerHTML = h;
+  document.getElementById('o-contract').innerHTML = CONTRACTS.map((c,i) => `<button class="chip oct px-4 py-2 rounded-full border text-label-md" data-c="${c}" onclick="pickOfferContract('${c}')">${c}</button>`).join('');
+  S.offerContract = "CDI";
+  paintContracts(); paintOfferContract();
+}
+function toggleContract(c) { S.contracts.has(c) ? S.contracts.delete(c) : S.contracts.add(c); paintContracts(); }
+function paintContracts() {
+  document.querySelectorAll('.ct').forEach(b => {
+    const on = S.contracts.has(b.dataset.c);
+    b.className = "chip ct px-4 py-2 rounded-full border text-label-md " + (on ? "bg-primary-fixed border-primary text-primary" : "bg-surface-container-low border-outline-variant text-on-surface-variant");
+  });
+}
+function pickOfferContract(c) { S.offerContract = c; paintOfferContract(); }
+function paintOfferContract() {
+  document.querySelectorAll('.oct').forEach(b => {
+    const on = b.dataset.c === S.offerContract;
+    b.className = "chip oct px-4 py-2 rounded-full border text-label-md " + (on ? "bg-primary-fixed border-primary text-primary" : "bg-surface-container-low border-outline-variant text-on-surface-variant");
+  });
+}
+function buildDegrees() {
+  document.getElementById('degree-chips').innerHTML = DEGREES.map(d => `<button class="chip dg px-4 py-2 rounded-full border text-label-md" data-d="${d}" onclick="setDegree('${d}')">${d}</button>`).join('');
+  document.getElementById('e-degree').innerHTML = DEGREES.map(d => `<option>${d}</option>`).join('');
+  document.getElementById('o-degree').innerHTML = DEGREES.map(d => `<option ${d === "Bac +5 (Master / Ingénieur)" ? 'selected' : ''}>${d}</option>`).join('');
+  paintDegrees();
+}
+function setDegree(d) { S.degree = d; paintDegrees(); }
+function paintDegrees() {
+  document.querySelectorAll('.dg').forEach(b => {
+    const on = b.dataset.d === S.degree;
+    b.className = "chip dg px-4 py-2 rounded-full border text-label-md " + (on ? "bg-primary-fixed border-primary text-primary" : "bg-surface-container-low border-outline-variant text-on-surface-variant");
+  });
+  document.getElementById('e-degree').value = S.degree;
+}
+function paintLangs() {
+  document.getElementById('lang-list').innerHTML = S.langs.map((l,i) => `
+    <div class="rounded-[20px] bg-surface-container-lowest border border-outline-variant p-4">
+      <div class="flex items-center gap-2"><span class="material-symbols-outlined text-primary text-[20px]">translate</span><p class="text-headline-sm flex-1">${l.name}</p>
+      <button class="w-8 h-8 rounded-full grid place-items-center text-tertiary" onclick="removeLang(${i})"><span class="material-symbols-outlined text-[18px]">close</span></button></div>
+      <select class="field mt-2 text-[14px]" onchange="S.langs[${i}].level=this.value;paintLangs()">${LEVELS.map(v => `<option ${v === l.level ? 'selected':''}>${v}</option>`).join('')}</select>
+    </div>`).join('') || '<p class="text-body-md text-outline">Aucune langue ajoutée.</p>';
+  const rows = S.langs.map(l => langRow(l)).join('') || '<p class="p-4 text-body-md text-outline">Aucune langue.</p>';
+  document.getElementById('p-langs').innerHTML = rows;
+  document.getElementById('e-langs').innerHTML = rows;
+  document.getElementById('o-langs').innerHTML = S.offerLangs.map((l,i) => `
+    <div class="flex items-center gap-2">
+      <span class="field flex-1 text-[14px] bg-white">${l.name}</span>
+      <select class="field flex-1 text-[14px]" onchange="S.offerLangs[${i}].level=this.value">${LEVELS.map(v => `<option ${v === l.level ? 'selected':''}>${v}</option>`).join('')}</select>
+    </div>`).join('');
+}
+function langRow(l) {
+  return `<div class="flex items-center gap-3 p-4"><span class="material-symbols-outlined text-primary text-[20px]">translate</span><span class="flex-1 text-body-lg">${l.name}</span>
+    <span class="text-label-md px-3 py-1.5 rounded-full ${l.level === 'Langue maternelle' ? 'bg-secondary-container text-on-secondary-container' : 'bg-surface-container-high text-primary'}">${l.level}</span></div>`;
+}
+function removeLang(i) { S.langs.splice(i,1); paintLangs(); }
+function addLang() {
+  const sel = document.getElementById('lang-new');
+  if (!sel.value) return toast('Choisissez une langue','info');
+  if (S.langs.some(l => l.name === sel.value)) return toast('Langue déjà ajoutée','info');
+  S.langs.push({ name: sel.value, level: "B1 — Intermédiaire" });
+  sel.value = ''; paintLangs(); toast('Langue ajoutée','translate');
+}
+
+/* ═══════════ CANDIDAT : PROFIL ═══════════ */
+function finishCandidate() {
+  S.onboarded = true; S.role = 'candidat';
+  const bio = document.getElementById('bio').value.trim();
+  if (bio) document.getElementById('e-bio').value = bio;
+  go('sc-cdash'); toast('Profil enregistré','check_circle');
+}
+function saveProfile() {
+  go('sc-cprofile'); toast('Modifications enregistrées','check_circle');
+}
+function renderProfile() {
+  const name = document.getElementById('c-name').value;
+  const title = document.getElementById('e-title').value;
+  const loc = document.getElementById('e-loc').value;
+  document.getElementById('p-name').textContent = name;
+  document.getElementById('p-title').textContent = title + " · " + document.getElementById('c-exp').value;
+  document.getElementById('p-bio').textContent = document.getElementById('e-bio').value;
+  document.getElementById('p-meta').innerHTML =
+    `<span class="text-label-md px-3 py-1.5 rounded-full bg-surface-container-low text-on-surface-variant flex items-center gap-1"><span class="material-symbols-outlined text-[14px]">location_on</span> ${loc}</span>
+     <span class="text-label-md px-3 py-1.5 rounded-full bg-secondary-container text-on-secondary-container flex items-center gap-1"><span class="material-symbols-outlined text-[14px]">bolt</span> Disponible</span>`;
+  document.getElementById('p-contracts').innerHTML = [...S.contracts].map(c => `<span class="text-label-md px-3 py-1.5 rounded-full bg-primary-fixed text-primary">${c}</span>`).join('') || '<span class="text-body-md text-outline">Aucun type choisi.</span>';
+  document.getElementById('p-skills').innerHTML = [...S.skills].map(s => `<span class="text-label-md px-3 py-1.5 rounded-full bg-surface-container-low border border-outline-variant">${s}</span>`).join('');
+  document.getElementById('e-skills').innerHTML = [...S.skills].map(s => `<span class="text-label-md px-3 py-1.5 rounded-full bg-primary-fixed text-primary flex items-center gap-1">${s}<span class="material-symbols-outlined text-[14px] cursor-pointer" onclick="toggleSkill('${s.replace(/'/g,"\\'")}');renderProfile()">close</span></span>`).join('');
+  document.getElementById('p-education').innerHTML = `
+    <div class="w-11 h-11 rounded-[14px] bg-primary-fixed text-primary grid place-items-center shrink-0"><span class="material-symbols-outlined">school</span></div>
+    <div class="flex-1"><p class="text-headline-sm">${document.getElementById('c-diploma').value}</p>
+    <p class="text-body-md text-on-surface-variant">${document.getElementById('c-school').value} · ${document.getElementById('c-year').value}</p>
+    <span class="mt-2 inline-block text-label-md px-3 py-1 rounded-full bg-surface-container-high text-primary">${S.degree}</span></div>`;
+  paintLangs();
+}
+function renderCandidateDash() {
+  document.getElementById('c-stats').innerHTML = [
+    ["favorite","primary",S.interests.length,"Intérêts envoyés"],
+    ["handshake","secondary",S.cMatches.length,"Matchs"],
+    ["forum","primary",S.cMatches.length,"Conversations"]
+  ].map(([i,c,v,l]) => `<div class="rounded-[18px] bg-surface-container-lowest border border-outline-variant p-3"><span class="material-symbols-outlined text-${c} text-[20px]">${i}</span><p class="text-stat-numeric mt-1">${v}</p><p class="text-body-sm text-on-surface-variant">${l}</p></div>`).join('');
+  const el = document.getElementById('c-applications');
+  el.innerHTML = S.interests.length === 0
+    ? `<div class="rounded-[20px] border border-dashed border-outline-variant p-6 text-center"><p class="text-body-md text-on-surface-variant">Aucune candidature. Découvrez les offres et manifestez votre intérêt.</p></div>`
+    : S.interests.map(o => {
+      const matched = S.cMatches.some(m => m.offer.id === o.id);
+      return `<article class="rounded-[20px] bg-surface-container-lowest border border-outline-variant p-4">
+        <div class="flex items-start gap-3">
+          <div class="w-11 h-11 rounded-[14px] bg-surface-container-high grid place-items-center text-label-lg text-primary">${o.i}</div>
+          <div class="flex-1 min-w-0"><p class="text-headline-sm truncate">${o.title}</p><p class="text-body-md text-on-surface-variant">${o.co} · ${o.contract}</p></div>
+          <span class="text-label-md px-2.5 py-1 rounded-full bg-primary-fixed text-primary shrink-0">${o.min}–${o.max} k€</span>
+        </div>
+        <div class="mt-3 flex items-center gap-2">
+          ${matched
+            ? `<span class="text-label-md px-3 py-1.5 rounded-full bg-secondary-container text-on-secondary-container flex items-center gap-1"><span class="material-symbols-outlined text-[14px] fill">check_circle</span> Match confirmé</span>
+               <button class="ml-auto h-10 px-4 rounded-full bg-secondary text-white text-label-md" onclick="openChat(${o.id},'sc-cdash')">Discuter</button>`
+            : `<span class="text-label-md px-3 py-1.5 rounded-full bg-surface-container-high text-on-surface-variant">Décision recruteur en attente</span>`}
+        </div></article>`;
+    }).join('');
+}
+function renderCandidateMatches() {
+  document.getElementById('match-count').textContent = S.cMatches.length;
+  document.getElementById('c-matches').innerHTML = S.cMatches.length === 0
+    ? `<div class="rounded-[20px] border border-dashed border-outline-variant p-6 text-center"><p class="text-body-md text-on-surface-variant">Pas encore de match. Continuez à parcourir les offres.</p></div>`
+    : S.cMatches.map(m => `
+      <button class="w-full text-left rounded-[20px] bg-surface-container-lowest border border-outline-variant p-4 flex items-center gap-3" onclick="openChat(${m.offer.id},'sc-cmatches')">
+        <div class="w-12 h-12 rounded-full bg-primary-fixed text-primary grid place-items-center text-label-lg">${initials(m.offer.recruiter)}</div>
+        <div class="flex-1 min-w-0"><p class="text-headline-sm truncate">${m.offer.recruiter}</p><p class="text-body-sm text-on-surface-variant truncate">${m.offer.co} · ${m.offer.title}</p></div>
+        <span class="material-symbols-outlined text-primary">chat_bubble</span>
+      </button>`).join('');
+  const pending = S.interests.filter(o => !S.cMatches.some(m => m.offer.id === o.id));
+  document.getElementById('c-pending').innerHTML = pending.length === 0
+    ? `<p class="text-body-md text-outline">Aucun intérêt en attente.</p>`
+    : pending.map(o => `<div class="rounded-[20px] bg-surface-container-low border border-outline-variant p-4 flex items-center gap-3">
+        <div class="w-10 h-10 rounded-[12px] bg-white border border-outline-variant grid place-items-center text-label-md text-primary">${o.i}</div>
+        <div class="flex-1 min-w-0"><p class="text-label-lg truncate">${o.title}</p><p class="text-body-sm text-on-surface-variant">${o.co}</p></div>
+        <span class="text-label-md text-outline">En attente</span></div>`).join('');
+}
+
+/* ═══════════ CANDIDAT : DECK ═══════════ */
+function renderDeck() {
+  document.getElementById('discover-filters').innerHTML =
+    ["Télétravail : hybride","Min. 45 k€","CDI","Limoges & Paris"].map(f => `<span class="shrink-0 text-label-md px-3 py-2 rounded-full bg-surface-container-low border border-outline-variant text-on-surface-variant">${f}</span>`).join('');
+  const zone = document.getElementById('deck-zone');
+  const o = OFFERS[S.deckIndex];
+  if (!o) {
+    zone.innerHTML = `<div class="h-full grid place-items-center text-center px-6"><div>
+      <span class="material-symbols-outlined text-[46px] text-outline">inbox</span>
+      <p class="text-headline-md mt-2">Plus d'offres pour aujourd'hui</p>
+      <p class="text-body-md text-on-surface-variant mt-1">Élargissez vos filtres ou revenez demain.</p>
+      <button class="mt-4 h-11 px-5 rounded-full bg-primary-container text-white text-label-lg" onclick="S.deckIndex=0;renderDeck()">Recommencer la pile</button></div></div>`;
+    return;
+  }
+  zone.innerHTML = `
+    <div class="absolute inset-x-2 top-3 bottom-0 rounded-[32px] bg-white border border-outline-variant opacity-60 scale-95"></div>
+    <div class="relative rounded-[32px] bg-white border border-outline-variant shadow-xl shadow-on-surface/10 overflow-hidden h-full flex flex-col deck-card" id="deck-card">
+      <div class="stamp left-5 border-secondary text-secondary -rotate-12" id="stamp-like">INTÉRESSÉ</div>
+      <div class="stamp right-5 border-tertiary-container text-tertiary-container rotate-12" id="stamp-pass">PASSER</div>
+      <div class="bg-primary-container text-white p-5">
+        <div class="flex items-center gap-2">
+          <span class="text-label-md px-3 py-1 rounded-full bg-white/20">${o.match} % compatibilité</span>
+          <span class="text-label-md px-3 py-1 rounded-full bg-secondary-container text-on-secondary-container flex items-center gap-1"><span class="material-symbols-outlined text-[14px] fill">verified</span> Vérifiée</span>
+        </div>
+        <div class="mt-4 flex items-center gap-3">
+          <div class="w-14 h-14 rounded-full bg-white text-primary grid place-items-center font-bold">${o.i}</div>
+          <div><p class="text-label-md opacity-80">${o.co.toUpperCase()}</p><p class="text-headline-sm">${o.city} · ${o.remote}</p></div>
+        </div>
+      </div>
+      <div class="p-5 flex-1 overflow-y-auto scroll">
+        <h2 class="text-headline-xl-mobile">${o.title}</h2>
+        <div class="mt-3 flex flex-wrap gap-2">
+          <span class="text-label-md px-3 py-1.5 rounded-full bg-primary-fixed text-primary">${o.min} – ${o.max} k€ / an</span>
+          <span class="text-label-md px-3 py-1.5 rounded-full bg-surface-container-low border border-outline-variant">${o.contract}</span>
+          <span class="text-label-md px-3 py-1.5 rounded-full bg-surface-container-low border border-outline-variant">${o.degree}</span>
+        </div>
+        <p class="text-label-sm text-outline mt-4">COMPÉTENCES RECHERCHÉES</p>
+        <div class="mt-2 flex flex-wrap gap-2">${o.skills.map(s => `<span class="text-label-md px-3 py-1.5 rounded-full ${S.skills.has(s) ? 'bg-secondary-container text-on-secondary-container' : 'bg-surface-container-low border border-outline-variant text-on-surface-variant'}">${s}</span>`).join('')}</div>
+        <p class="text-label-sm text-outline mt-4">LANGUES</p>
+        <div class="mt-2 flex flex-wrap gap-2">${o.langs.map(l => `<span class="text-label-md px-3 py-1.5 rounded-full bg-surface-container-low border border-outline-variant">${l.name} · ${l.level.split(' — ')[0]}</span>`).join('')}</div>
+        <p class="text-body-md text-on-surface-variant mt-4">${o.desc}</p>
+        <button class="mt-4 text-label-md text-primary flex items-center gap-1" onclick="openOffer(${o.id})">Voir le détail complet <span class="material-symbols-outlined text-[16px]">chevron_right</span></button>
+      </div>
+      <div class="px-5 py-3 border-t border-outline-variant/40 flex items-center justify-between text-label-sm text-outline">
+        <span>Publiée ${o.posted}</span><span class="text-secondary">Réponse &lt; 48 h</span>
+      </div>
+    </div>`;
+}
+function swipeOffer(type) {
+  const o = OFFERS[S.deckIndex];
+  if (!o) return;
+  const card = document.getElementById('deck-card');
+  if (type === 'like' || type === 'super') {
+    if (card) { document.getElementById('stamp-like').style.opacity = 1; card.style.transform = 'translateX(200px) rotate(12deg)'; card.style.opacity = 0; }
+    if (!S.interests.some(i => i.id === o.id)) S.interests.push(o);
+    toast(type === 'super' ? "Intérêt prioritaire envoyé" : "Intérêt enregistré", 'favorite');
+    if (o.match >= 88) setTimeout(() => createCandidateMatch(o), 500);
+  } else {
+    if (card) { document.getElementById('stamp-pass').style.opacity = 1; card.style.transform = 'translateX(-200px) rotate(-12deg)'; card.style.opacity = 0; }
+    toast("Offre passée", 'close');
+  }
+  S.deckIndex++;
+  setTimeout(renderDeck, 450);
+}
+function openOffer(id) {
+  const o = OFFERS.find(x => x.id === id); S.currentOffer = o;
+  document.getElementById('offer-detail').innerHTML = `
+    <div class="rounded-[24px] bg-primary-container text-white p-5">
+      <div class="flex items-center gap-3"><div class="w-14 h-14 rounded-full bg-white text-primary grid place-items-center font-bold">${o.i}</div>
+      <div><p class="text-headline-sm">${o.co}</p><p class="text-body-md opacity-90">${o.city} · ${o.remote}</p></div></div>
+      <h1 class="text-headline-xl-mobile mt-4">${o.title}</h1>
+      <p class="text-body-md opacity-90 mt-1">${o.contract} · ${o.min}–${o.max} k€ · publiée ${o.posted}</p>
+    </div>
+    <h2 class="text-headline-md mt-6">Missions</h2><p class="mt-2 text-body-lg text-on-surface-variant">${o.desc}</p>
+    <h2 class="text-headline-md mt-6">Compétences attendues</h2>
+    <div class="mt-2 flex flex-wrap gap-2">${o.skills.map(s => `<span class="text-label-md px-3 py-1.5 rounded-full ${S.skills.has(s) ? 'bg-secondary-container text-on-secondary-container' : 'bg-surface-container-low border border-outline-variant'}">${s}</span>`).join('')}</div>
+    <h2 class="text-headline-md mt-6">Profil recherché</h2>
+    <div class="mt-2 rounded-[20px] bg-surface-container-lowest border border-outline-variant divide-y divide-outline-variant/40">
+      <div class="flex items-center gap-3 p-4"><span class="material-symbols-outlined text-primary text-[20px]">school</span><span class="flex-1 text-body-lg">Niveau d'études</span><span class="text-label-md text-primary">${o.degree}</span></div>
+      ${o.langs.map(l => langRow(l)).join('')}
+    </div>
+    <h2 class="text-headline-md mt-6">Recruteur</h2>
+    <div class="mt-2 rounded-[20px] bg-surface-container-lowest border border-outline-variant p-4 flex items-center gap-3">
+      <div class="w-12 h-12 rounded-full bg-primary-fixed text-primary grid place-items-center text-label-lg">${initials(o.recruiter)}</div>
+      <div class="flex-1"><p class="text-headline-sm">${o.recruiter}</p><p class="text-body-sm text-on-surface-variant">Répond en moins de 48 h</p></div>
+    </div>`;
+  go('sc-offer');
+}
+
+/* ═══════════ RECRUTEUR ═══════════ */
+function finishRecruiter() {
+  S.onboarded = true; S.role = 'recruteur';
+  S.recruiter = { name: document.getElementById('r-name').value, role: document.getElementById('r-role').value };
+  go('sc-rdash'); toast('Espace recruteur prêt','check_circle');
+}
+function searchCompany() {
+  const q = (document.getElementById('company-search').value || '').toLowerCase();
+  document.getElementById('company-results').innerHTML = COMPANIES.filter(c => c.n.toLowerCase().includes(q)).map(c => `
+    <button class="co w-full text-left rounded-[20px] bg-surface-container-lowest border border-outline-variant p-4 flex items-center gap-3" onclick="pickCompany(this,'${c.n}')">
+      <div class="w-11 h-11 rounded-[14px] bg-surface-container-high text-primary grid place-items-center text-label-lg shrink-0">${c.i}</div>
+      <div class="flex-1 min-w-0"><p class="text-headline-sm truncate">${c.n}</p><p class="text-body-sm text-on-surface-variant">${c.s} · ${c.e}</p></div>
+      <span class="material-symbols-outlined text-outline chk">radio_button_unchecked</span></button>`).join('')
+    || '<p class="text-body-md text-outline">Aucune entreprise référencée sous ce nom.</p>';
+}
+function pickCompany(el, name) {
+  document.querySelectorAll('.co').forEach(c => {
+    c.className = "co w-full text-left rounded-[20px] bg-surface-container-lowest border border-outline-variant p-4 flex items-center gap-3";
+    c.querySelector('.chk').textContent = 'radio_button_unchecked'; c.querySelector('.chk').className = 'material-symbols-outlined text-outline chk';
+  });
+  el.className = "co w-full text-left rounded-[20px] bg-surface-container-lowest border-2 border-secondary p-4 flex items-center gap-3";
+  el.querySelector('.chk').textContent = 'check_circle'; el.querySelector('.chk').className = 'material-symbols-outlined text-secondary fill chk';
+  S.company = COMPANIES.find(c => c.n === name);
+  document.getElementById('co-name').value = name;
+  document.getElementById('btn-r1').disabled = false;
+  toast(name + ' sélectionnée','apartment');
+}
+function buildPerks() {
+  document.getElementById('perk-chips').innerHTML = PERKS.map(p => `<button class="chip pk px-4 py-2 rounded-full border text-label-md" data-p="${p}" onclick="togglePerk('${p}')">${p}</button>`).join('');
+  paintPerks();
+}
+function togglePerk(p) { S.perks.has(p) ? S.perks.delete(p) : S.perks.add(p); paintPerks(); }
+function paintPerks() {
+  document.querySelectorAll('.pk').forEach(b => {
+    const on = S.perks.has(b.dataset.p);
+    b.className = "chip pk px-4 py-2 rounded-full border text-label-md " + (on ? "bg-secondary-container border-secondary text-on-secondary-container" : "bg-surface-container-low border-outline-variant text-on-surface-variant");
+  });
+}
+function countCo() { document.getElementById('co-count').textContent = document.getElementById('co-bio').value.length + " / 400"; }
+function renderCompanyProfile() {
+  document.getElementById('rp-name').textContent = document.getElementById('co-name').value;
+  document.getElementById('rp-initials').textContent = initials(document.getElementById('co-name').value);
+  document.getElementById('rp-meta').textContent = `${document.getElementById('co-sector').value} · ${document.getElementById('co-size').value} · ${document.getElementById('co-city').value}`;
+  document.getElementById('rp-bio').textContent = document.getElementById('co-bio').value;
+  document.getElementById('rp-perks').innerHTML = [...S.perks].map(p => `<span class="text-label-md px-3 py-1.5 rounded-full bg-secondary-container text-on-secondary-container">${p}</span>`).join('') || '<span class="text-body-md text-outline">Aucun avantage renseigné.</span>';
+  document.getElementById('rp-rname').textContent = S.recruiter.name;
+  document.getElementById('rp-rrole').textContent = S.recruiter.role;
+}
+function renderRecruiterDash() {
+  document.getElementById('rdash-company').textContent = document.getElementById('co-name').value;
+  document.getElementById('rdash-initials').textContent = initials(document.getElementById('co-name').value);
+  const pub = MY_OFFERS.filter(o => o.status === 'published').length;
+  const interested = MY_OFFERS.reduce((a,o) => a + o.interested, 0);
+  document.getElementById('r-stats').innerHTML = [
+    ["work","primary",pub,"Offres publiées"],["group","primary",interested,"Intéressés"],["handshake","secondary",S.rMatches.length,"Matchs"]
+  ].map(([i,c,v,l]) => `<div class="rounded-[18px] bg-surface-container-lowest border border-outline-variant p-3"><span class="material-symbols-outlined text-${c} text-[20px]">${i}</span><p class="text-stat-numeric mt-1">${v}</p><p class="text-body-sm text-on-surface-variant">${l}</p></div>`).join('');
+  document.getElementById('r-offer-count').textContent = MY_OFFERS.length + " au total";
+  document.getElementById('r-offers').innerHTML = MY_OFFERS.map(o => `
+    <article class="rounded-[20px] bg-surface-container-lowest border border-outline-variant p-4">
+      <div class="flex items-start justify-between gap-2">
+        <div class="min-w-0"><p class="text-headline-sm truncate">${o.title}</p><p class="text-body-md text-on-surface-variant">${o.contract} · ${o.city} (${o.remote}) · ${o.min}–${o.max} k€</p></div>
+        <span class="text-label-md px-2.5 py-1 rounded-full shrink-0 ${o.status === 'published' ? 'bg-secondary-container text-on-secondary-container' : 'bg-error-container text-on-error-container'}">${o.status === 'published' ? 'Publiée' : 'Fermée'}</span>
+      </div>
+      <div class="mt-3 flex items-center gap-2">
+        <span class="text-label-md px-3 py-1.5 rounded-full bg-primary-fixed text-primary">${o.interested} intéressés</span>
+        <button class="ml-auto h-10 px-4 rounded-full border border-outline-variant text-label-md text-primary" onclick="openMyOffer(${o.id})">Détail</button>
+        ${o.status === 'published' ? `<button class="h-10 px-4 rounded-full bg-primary-container text-white text-label-md" onclick="openQueue(${o.id})">Examiner</button>` : ''}
+      </div>
+    </article>`).join('');
+}
+function openNewOffer() { go('sc-newoffer'); }
+function publishOffer() {
+  const title = document.getElementById('o-title').value.trim() || "Offre sans titre";
+  const o = {
+    id: Date.now(), title, contract: S.offerContract,
+    city: document.getElementById('o-city').value, remote: document.getElementById('o-remote').value,
+    min: document.getElementById('o-min').value, max: document.getElementById('o-max').value,
+    degree: document.getElementById('o-degree').value, skills: [...S.offerSkills],
+    desc: document.getElementById('o-desc').value, status: 'published', interested: CANDIDATES.length, matches: 0,
+    langs: S.offerLangs.map(l => ({...l}))
+  };
+  MY_OFFERS.unshift(o);
+  document.getElementById('o-title').value = '';
+  go('sc-rdash');
+  toast("Offre publiée et visible des candidats", 'check_circle');
+}
+function openMyOffer(id) {
+  const o = MY_OFFERS.find(x => x.id === id); S.currentQueueOffer = o;
+  document.getElementById('roffer-detail').innerHTML = `
+    <div class="rounded-[24px] bg-white border border-outline-variant p-5">
+      <div class="flex items-start justify-between gap-2">
+        <h1 class="text-headline-xl-mobile">${o.title}</h1>
+        <span class="text-label-md px-2.5 py-1 rounded-full shrink-0 ${o.status === 'published' ? 'bg-secondary-container text-on-secondary-container' : 'bg-error-container text-on-error-container'}">${o.status === 'published' ? 'Publiée' : 'Fermée'}</span>
+      </div>
+      <p class="text-body-lg text-on-surface-variant mt-1">${o.contract} · ${o.city} (${o.remote}) · ${o.min}–${o.max} k€</p>
+      <div class="mt-4 grid grid-cols-3 gap-2 text-center">
+        <div class="rounded-[14px] bg-surface-container-low p-2"><p class="text-stat-numeric">${o.interested}</p><p class="text-body-sm text-on-surface-variant">Intéressés</p></div>
+        <div class="rounded-[14px] bg-surface-container-low p-2"><p class="text-stat-numeric">${o.matches}</p><p class="text-body-sm text-on-surface-variant">Matchs</p></div>
+        <div class="rounded-[14px] bg-surface-container-low p-2"><p class="text-stat-numeric">${o.skills.length}</p><p class="text-body-sm text-on-surface-variant">Compétences</p></div>
+      </div>
+    </div>
+    <h2 class="text-headline-md mt-6">Description</h2><p class="mt-2 text-body-lg text-on-surface-variant">${o.desc}</p>
+    <h2 class="text-headline-md mt-6">Compétences requises</h2>
+    <div class="mt-2 flex flex-wrap gap-2">${o.skills.map(s => `<span class="text-label-md px-3 py-1.5 rounded-full bg-surface-container-low border border-outline-variant">${s}</span>`).join('')}</div>
+    <h2 class="text-headline-md mt-6">Exigences</h2>
+    <div class="mt-2 rounded-[20px] bg-white border border-outline-variant divide-y divide-outline-variant/40">
+      <div class="flex items-center gap-3 p-4"><span class="material-symbols-outlined text-primary text-[20px]">school</span><span class="flex-1 text-body-lg">Niveau d'études</span><span class="text-label-md text-primary">${o.degree}</span></div>
+      ${(o.langs||[]).map(l => langRow(l)).join('')}
+    </div>
+    <div class="mt-6 space-y-2">
+      ${o.status === 'published' ? `<button class="w-full h-14 btn-primary" onclick="openQueue(${o.id})">Examiner les ${o.interested} candidats intéressés</button>` : ''}
+      <button class="w-full h-12 rounded-[18px] border border-outline-variant bg-white text-label-lg text-on-surface-variant" onclick="toast('Formulaire d\\'édition de l\\'offre','edit')">Modifier l'offre</button>
+      ${o.status === 'published'
+        ? `<button class="w-full h-12 rounded-[18px] border border-tertiary/40 text-tertiary text-label-lg" onclick="closeOffer(${o.id})">Fermer l'offre</button>`
+        : `<button class="w-full h-12 rounded-[18px] border border-secondary/40 text-secondary text-label-lg" onclick="reopenOffer(${o.id})">Republier l'offre</button>`}
+    </div>`;
+  go('sc-roffer');
+}
+function closeOffer(id) { const o = MY_OFFERS.find(x => x.id === id); o.status = 'closed'; openMyOffer(id); toast("Offre fermée — les matchs sont conservés", 'lock'); }
+function reopenOffer(id) { const o = MY_OFFERS.find(x => x.id === id); o.status = 'published'; openMyOffer(id); toast("Offre republiée", 'check_circle'); }
+function openQueue(id) { S.currentQueueOffer = MY_OFFERS.find(x => x.id === id); S.queueIndex = 0; go('sc-rqueue'); }
+function renderQueue() {
+  const o = S.currentQueueOffer;
+  document.getElementById('queue-offer').textContent = o ? o.title : '—';
+  const left = CANDIDATES.length - S.queueIndex;
+  document.getElementById('queue-left').textContent = Math.max(left,0);
+  const zone = document.getElementById('cand-zone');
+  const c = CANDIDATES[S.queueIndex];
+  if (!c) {
+    zone.innerHTML = `<div class="h-full grid place-items-center text-center px-6"><div>
+      <span class="material-symbols-outlined text-[46px] text-outline">done_all</span>
+      <p class="text-headline-md mt-2">File traitée</p>
+      <p class="text-body-md text-on-surface-variant mt-1">Tous les candidats intéressés par cette offre ont reçu une décision.</p>
+      <button class="mt-4 h-11 px-5 rounded-full bg-primary-container text-white text-label-lg" onclick="go('sc-rdash')">Retour à mes offres</button></div></div>`;
+    return;
+  }
+  zone.innerHTML = `
+    <div class="relative rounded-[32px] bg-white border border-outline-variant shadow-xl shadow-on-surface/10 overflow-hidden h-full flex flex-col deck-card" id="cand-card">
+      <div class="stamp left-5 border-secondary text-secondary -rotate-12" id="cstamp-yes">MATCH</div>
+      <div class="stamp right-5 border-tertiary-container text-tertiary-container rotate-12" id="cstamp-no">ÉCARTÉ</div>
+      <div class="bg-secondary-container px-5 py-3 flex items-center justify-between">
+        <span class="text-label-md text-on-secondary-container flex items-center gap-1"><span class="material-symbols-outlined text-[16px] fill">favorite</span> A manifesté son intérêt</span>
+        <span class="text-label-md px-3 py-1 rounded-full bg-white text-secondary">Score ${c.match} %</span>
+      </div>
+      <div class="p-5 flex-1 overflow-y-auto scroll">
+        <div class="flex items-start gap-3">
+          <div class="w-16 h-16 rounded-[20px] bg-surface-container-high text-primary grid place-items-center text-headline-md">${initials(c.name)}</div>
+          <div class="flex-1"><div class="flex items-center justify-between"><p class="text-headline-md">${c.name}</p><span class="text-body-sm text-outline">${c.age} ans</span></div>
+          <p class="text-body-lg text-primary">${c.title}</p><p class="text-body-sm text-on-surface-variant">${c.exp} d'expérience</p></div>
+        </div>
+        <div class="mt-4 grid grid-cols-3 gap-2">
+          ${[["LIEU",c.city],["DISPO",c.avail],["SALAIRE",c.salary]].map(([l,v]) => `<div class="rounded-[14px] bg-surface-container-low p-2"><p class="text-label-sm text-outline">${l}</p><p class="text-label-lg mt-0.5">${v}</p></div>`).join('')}
+        </div>
+        <p class="text-label-sm text-outline mt-4">FORMATION</p>
+        <p class="text-body-md mt-1">${c.degree} · ${c.school}</p>
+        <p class="text-label-sm text-outline mt-4">STACK TECHNIQUE</p>
+        <div class="mt-2 flex flex-wrap gap-2">${c.skills.map(s => {
+          const req = (S.currentQueueOffer?.skills || []).includes(s);
+          return `<span class="text-label-md px-3 py-1.5 rounded-full ${req ? 'bg-secondary-container text-on-secondary-container' : 'bg-surface-container-low border border-outline-variant'}">${s}</span>`;
+        }).join('')}</div>
+        <p class="text-label-sm text-outline mt-4">LANGUES</p>
+        <div class="mt-2 flex flex-wrap gap-2">${c.langs.map(l => `<span class="text-label-md px-3 py-1.5 rounded-full bg-surface-container-low border border-outline-variant">${l.name} · ${l.level.split(' — ')[0]}</span>`).join('')}</div>
+        <p class="text-body-md text-on-surface-variant mt-4">${c.bio}</p>
+        <button class="mt-4 w-full h-11 rounded-full border border-outline-variant text-label-md text-primary flex items-center justify-center gap-2" onclick="toast('CV ouvert via la route protégée','picture_as_pdf')"><span class="material-symbols-outlined text-[18px]">picture_as_pdf</span> Consulter le CV (PDF)</button>
+      </div>
+    </div>`;
+}
+function decideCandidate(action) {
+  const c = CANDIDATES[S.queueIndex];
+  if (!c) return;
+  const card = document.getElementById('cand-card');
+  if (action === 'accept') {
+    if (card) { document.getElementById('cstamp-yes').style.opacity = 1; card.style.transform = 'translateX(200px) rotate(12deg)'; card.style.opacity = 0; }
+    const offer = S.currentQueueOffer;
+    S.rMatches.push({ cand: c, offer });
+    if (offer) offer.matches++;
+    S.pendingMatch = { type:'recruteur', name:c.name, offer };
+    setTimeout(() => showMatch(`Vous et ${c.name} êtes intéressés par « ${offer ? offer.title : 'cette offre'} ». La conversation est ouverte.`), 450);
+  } else {
+    if (card) { document.getElementById('cstamp-no').style.opacity = 1; card.style.transform = 'translateX(-200px) rotate(-12deg)'; card.style.opacity = 0; }
+    toast("Candidat écarté", 'close');
+  }
+  S.queueIndex++;
+  setTimeout(renderQueue, 450);
+}
+function renderRecruiterMatches() {
+  document.getElementById('rmatch-count').textContent = S.rMatches.length;
+  document.getElementById('r-matches').innerHTML = S.rMatches.length === 0
+    ? `<div class="rounded-[20px] border border-dashed border-outline-variant p-6 text-center"><p class="text-body-md text-on-surface-variant">Aucun match. Examinez les candidats intéressés par vos offres.</p></div>`
+    : S.rMatches.map((m,i) => `
+      <button class="w-full text-left rounded-[20px] bg-surface-container-lowest border border-outline-variant p-4 flex items-center gap-3" onclick="openChatR(${i})">
+        <div class="w-12 h-12 rounded-full bg-secondary-container text-on-secondary-container grid place-items-center text-label-lg">${initials(m.cand.name)}</div>
+        <div class="flex-1 min-w-0"><p class="text-headline-sm truncate">${m.cand.name}</p><p class="text-body-sm text-on-surface-variant truncate">${m.offer ? m.offer.title : ''}</p></div>
+        <span class="material-symbols-outlined text-secondary">chat_bubble</span></button>`).join('');
+}
+
+/* ═══════════ MATCH & MESSAGERIE ═══════════ */
+function createCandidateMatch(o) {
+  S.cMatches.push({ offer: o });
+  S.pendingMatch = { type:'candidat', offerId: o.id };
+  showMatch(`${o.recruiter} de ${o.co} a validé votre intérêt pour « ${o.title} ».`);
+}
+function showMatch(txt) {
+  document.getElementById('match-text').textContent = txt;
+  const m = document.getElementById('match-modal'); m.classList.remove('hidden'); m.classList.add('flex');
+}
+function closeMatch() { const m = document.getElementById('match-modal'); m.classList.add('hidden'); m.classList.remove('flex'); }
+function openChatFromMatch() {
+  closeMatch();
+  if (!S.pendingMatch) return;
+  if (S.pendingMatch.type === 'candidat') openChat(S.pendingMatch.offerId, 'sc-cmatches');
+  else openChatR(S.rMatches.length - 1);
+}
+const CHATS = {};
+function chatKey() { return S.chat ? S.chat.key : ''; }
+function openChat(offerId, from) {
+  const o = OFFERS.find(x => x.id === offerId);
+  S.chat = { key: 'c' + offerId, name: o.recruiter, sub: `${o.co} · répond en moins de 48 h`, offer: `${o.title} (${o.contract} – ${o.city})`, me: 'candidat' };
+  S.chatFrom = from || 'sc-cmatches';
+  if (!CHATS[S.chat.key]) CHATS[S.chat.key] = [
+    { me:false, t:`Bonjour ! Votre profil correspond à nos attentes sur ${o.skills.slice(0,2).join(' et ')}. Seriez-vous disponible pour un échange téléphonique ?`, h:"10:15" }
+  ];
+  paintChat();
+}
+function openChatR(i) {
+  const m = S.rMatches[i];
+  S.chat = { key: 'r' + i, name: m.cand.name, sub: `${m.cand.title} · ${m.cand.city}`, offer: m.offer ? m.offer.title : 'Offre', me: 'recruteur' };
+  S.chatFrom = 'sc-rmatches';
+  if (!CHATS[S.chat.key]) CHATS[S.chat.key] = [
+    { me:false, t:`Bonjour, merci pour votre retour rapide. Je reste disponible pour un premier échange cette semaine.`, h:"09:42" }
+  ];
+  paintChat();
+}
+function paintChat() {
+  document.getElementById('chat-name').textContent = S.chat.name;
+  document.getElementById('chat-sub').textContent = S.chat.sub;
+  document.getElementById('chat-avatar').textContent = initials(S.chat.name);
+  document.getElementById('chat-offer').textContent = "Offre liée : " + S.chat.offer;
+  const body = document.getElementById('chat-body');
+  body.innerHTML = `
+    <div class="rounded-[20px] bg-white border border-outline-variant p-4 text-center">
+      <div class="w-12 h-12 rounded-full bg-secondary-container mx-auto grid place-items-center"><span class="material-symbols-outlined text-secondary fill">handshake</span></div>
+      <p class="text-headline-sm mt-2">Match confirmé</p>
+      <p class="text-body-sm text-on-surface-variant mt-1">Conversation privée, réservée aux deux participants du match.</p>
+    </div>` +
+    CHATS[chatKey()].map(m => m.me
+      ? `<div class="flex justify-end"><div class="max-w-[80%] rounded-[20px] rounded-br-md bg-primary-container text-white px-4 py-2.5 text-body-lg">${m.t}<div class="text-label-sm opacity-70 text-right mt-1">${m.h}</div></div></div>`
+      : `<div class="flex justify-start"><div class="max-w-[80%] rounded-[20px] rounded-bl-md bg-white border border-outline-variant px-4 py-2.5 text-body-lg">${m.t}<div class="text-label-sm text-outline mt-1">${m.h}</div></div></div>`).join('');
+  go('sc-chat');
+  setTimeout(() => body.scrollTop = body.scrollHeight, 50);
+}
+function sendMsg() {
+  const i = document.getElementById('chat-input');
+  const v = i.value.trim(); if (!v) return;
+  CHATS[chatKey()].push({ me:true, t:v, h:now() });
+  i.value = '';
+  paintChat();
+  setTimeout(() => {
+    CHATS[chatKey()].push({ me:false, t:"Très bien, je vous propose un créneau jeudi à 14 h. Cela vous convient ?", h: now() });
+    paintChat();
+  }, 1200);
+}
+function backFromChat() { go(S.chatFrom); }
+
+/* ═══════════ SUPPRESSION ═══════════ */
+const DEL = {
+  candidat: { t:"Supprimer votre profil ?", l:["Votre profil, compétences, langues, diplôme et CV","Vos intérêts et vos matchs","L'accès à vos conversations"] },
+  entreprise: { t:"Supprimer le compte recruteur ?", l:["Votre profil recruteur et son rattachement","La fermeture de vos offres publiées","L'accès aux conversations issues de vos matchs"] }
+};
+function openDelete(target) {
+  S.delTarget = target;
+  document.getElementById('del-title').textContent = DEL[target].t;
+  document.getElementById('del-list').innerHTML = DEL[target].l.map(x => `<li class="flex gap-2"><span class="material-symbols-outlined text-[18px] text-tertiary">remove</span> ${x}</li>`).join('');
+  const m = document.getElementById('delete-modal'); m.classList.remove('hidden'); m.classList.add('flex');
+  document.getElementById('confirm-input').value = ''; checkConfirm();
+}
+function closeDelete() { const m = document.getElementById('delete-modal'); m.classList.add('hidden'); m.classList.remove('flex'); }
+function checkConfirm() { document.getElementById('confirm-btn').disabled = document.getElementById('confirm-input').value.trim().toUpperCase() !== 'SUPPRIMER'; }
+function doDelete() { closeDelete(); go('sc-landing'); toast(S.delTarget === 'candidat' ? 'Profil supprimé' : 'Compte recruteur supprimé','delete_forever'); }
+
+/* ═══════════ UTILITAIRES ═══════════ */
+function initials(n) { return n.split(' ').map(w => w[0]).slice(0,2).join('').toUpperCase(); }
+function now() { const d = new Date(); return String(d.getHours()).padStart(2,'0') + ':' + String(d.getMinutes()).padStart(2,'0'); }
+function pickOne(el, tone) {
+  el.parentElement.querySelectorAll('button').forEach(b => b.className = "chip px-4 py-2 rounded-full border text-label-md bg-surface-container-low border-outline-variant text-on-surface-variant");
+  el.className = "chip px-4 py-2 rounded-full border text-label-md " + (tone === 'green' ? "bg-secondary-container border-secondary text-on-secondary-container" : "bg-primary-fixed border-primary text-primary");
+}
+function countBio() { document.getElementById('bio-count').textContent = document.getElementById('bio').value.length + " / 280"; }
+function setBio(b) { document.getElementById('bio').value = b.textContent.trim(); countBio(); }
+function uploadCv() {
+  document.getElementById('cv-drop').classList.add('hidden');
+  document.getElementById('cv-file').classList.remove('hidden');
+  const bar = document.getElementById('cv-bar'); bar.style.width = '0%'; requestAnimationFrame(() => bar.style.width = '100%');
+  toast('CV PDF accepté (412 Ko)','check_circle');
+}
+function removeCv() { document.getElementById('cv-file').classList.add('hidden'); document.getElementById('cv-drop').classList.remove('hidden'); toast('CV supprimé','delete'); }
+let tt;
+function toast(msg, icon) {
+  const t = document.getElementById('toast');
+  document.getElementById('toast-text').textContent = msg;
+  document.getElementById('toast-icon').textContent = icon || 'check';
+  t.classList.remove('opacity-0','scale-90'); t.classList.add('opacity-100','scale-100');
+  clearTimeout(tt); tt = setTimeout(() => { t.classList.add('opacity-0','scale-90'); t.classList.remove('opacity-100','scale-100'); }, 2200);
+}
+
+/* ═══════════ INITIALISATION ═══════════ */
+stepHeader('c1-head',1,5,"Identité professionnelle",'sc-auth','#2563eb');
+stepHeader('c2-head',2,5,"Compétences",'sc-c1','#2563eb');
+stepHeader('c3-head',3,5,"Formation et langues",'sc-c2','#2563eb');
+stepHeader('c4-head',4,5,"Présentation",'sc-c3','#2563eb');
+stepHeader('c5-head',5,5,"Votre CV",'sc-c4','#2563eb');
+stepHeader('r1-head',1,3,"Votre entreprise",'sc-auth','#006c49');
+stepHeader('r2-head',2,3,"Fiche entreprise",'sc-r1','#006c49');
+stepHeader('r3-head',3,3,"Profil recruteur",'sc-r2','#006c49');
+buildSkillPicker('cat-bar','skill-groups',S.skills,'toggleSkill','c');
+buildSkillPicker('o-cat-bar','o-skill-groups',S.offerSkills,'toggleOfferSkill','o');
+buildContracts(); buildDegrees(); buildPerks(); paintSkills(); paintOfferSkills(); paintLangs();
+searchCompany(); countBio(); countCo(); authTab('login'); pickRole('candidat');
+</script>
+</body>
+</html>

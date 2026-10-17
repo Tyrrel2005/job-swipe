@@ -1,54 +1,22 @@
-import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
-
-import './App.css'
-import AuthPage from './pages/AuthPage'
-import CandidateProfilePage from './pages/CandidateProfilePage'
-import CandidateEducationPage from './pages/CandidateEducationPage'
-import CandidateBioPage from './pages/CandidateBioPage'
-import CandidateCvPage from './pages/CandidateCvPage'
-import CandidateOfferPage from './pages/CandidateOfferPage'
-import CandidateMatchesPage from './pages/CandidateMatchesPage'
-import CandidateMessagesPage from './pages/CandidateMessagesPage'
-import NotificationsPage from './pages/NotificationsPage'
-import RecruiterProfilePage from './pages/RecruiterProfilePage'
-import RecruiterOfferCreatePage from './pages/RecruiterOfferCreatePage'
-import RecruiterOfferDetailPage from './pages/RecruiterOfferDetailPage'
-import RecruiterCandidatesPage from './pages/RecruiterCandidatesPage'
-import RecruiterMatchesPage from './pages/RecruiterMatchesPage'
-import RecruiterCompanyPage from './pages/RecruiterCompanyPage'
-import CandidateSkillsPage from './pages/CandidateSkillsPage'
-import CandidateProfileSettingsPage from './pages/CandidateProfileSettingsPage'
-import DashboardPage from './pages/DashboardPage'
-import LandingPage from './pages/LandingPage'
-import CandidateDiscoverPage from './pages/CandidateDiscoverPage'
-
-function App() {
-  return (
-    <BrowserRouter>
-      <Routes>
-        <Route path="/" element={<LandingPage />} />
-        <Route path="/auth" element={<AuthPage />} />
-        <Route path="/onboarding/candidate/profile" element={<CandidateProfilePage />} />
-        <Route path="/onboarding/candidate/skills" element={<CandidateSkillsPage />} />
-        <Route path="/onboarding/candidate/education" element={<CandidateEducationPage />} />
-        <Route path="/onboarding/candidate/bio" element={<CandidateBioPage />} />
-        <Route path="/onboarding/candidate/cv" element={<CandidateCvPage />} />
-        <Route path="/profile" element={<CandidateProfileSettingsPage />} />
-        <Route path="/offers/:id" element={<CandidateOfferPage />} />
-        <Route path="/discover" element={<CandidateDiscoverPage />} />
-        <Route path="/matches" element={<Navigate replace to="/dashboard" />} />
-        <Route path="/messages" element={<CandidateMessagesPage />} />
-        <Route path="/notifications" element={<NotificationsPage />} />
-        <Route path="/onboarding/recruiter/profile" element={<RecruiterProfilePage />} />
-        <Route path="/recruiter/offers/new" element={<RecruiterOfferCreatePage />} />
-        <Route path="/recruiter/offers/:id" element={<RecruiterOfferDetailPage />} />
-        <Route path="/recruiter/candidates" element={<RecruiterCandidatesPage />} />
-        <Route path="/recruiter/matches" element={<RecruiterMatchesPage />} />
-        <Route path="/recruiter/profile" element={<RecruiterCompanyPage />} />
-        <Route path="/dashboard" element={<DashboardPage />} />
-      </Routes>
-    </BrowserRouter>
-  )
-}
-
-export default App
+import { Navigate,Route,Routes } from 'react-router-dom';
+import { Protected,Shell } from './components/Layout';
+import Landing from './pages/Landing';
+import Auth from './pages/Auth';
+import CandidateSetup from './pages/CandidateSetup';
+import RecruiterSetup from './pages/RecruiterSetup';
+import CandidateDashboard from './pages/CandidateDashboard';
+import CandidateDiscover from './pages/CandidateDiscover';
+import CandidateOffer from './pages/CandidateOffer';
+import CandidateMatches from './pages/CandidateMatches';
+import CandidateProfile from './pages/CandidateProfile';
+import CandidateProfileEdit from './pages/CandidateProfileEdit';
+import RecruiterDashboard from './pages/RecruiterDashboard';
+import RecruiterOfferEditor from './pages/RecruiterOfferEditor';
+import RecruiterOfferDetail from './pages/RecruiterOfferDetail';
+import RecruiterCandidates from './pages/RecruiterCandidates';
+import RecruiterMatches from './pages/RecruiterMatches';
+import RecruiterCompany from './pages/RecruiterCompany';
+import Conversations from './pages/Conversations';
+import Chat from './pages/Chat';
+import Notifications from './pages/Notifications';
+export default function App(){return <Routes><Route path="/" element={<Landing/>}/><Route path="/auth" element={<Auth/>}/><Route element={<Protected/>}><Route element={<Shell/>}><Route path="/notifications" element={<Notifications/>}/><Route path="/conversations" element={<Conversations/>}/><Route path="/chat/match/:matchId" element={<Chat/>}/><Route path="/chat/:id" element={<Chat/>}/></Route></Route><Route element={<Protected role="candidate"/>}><Route element={<Shell/>}><Route path="/candidate/setup/:step" element={<CandidateSetup/>}/><Route path="/candidate/dashboard" element={<CandidateDashboard/>}/><Route path="/candidate/discover" element={<CandidateDiscover/>}/><Route path="/candidate/offers/:id" element={<CandidateOffer/>}/><Route path="/candidate/matches" element={<CandidateMatches/>}/><Route path="/candidate/profile" element={<CandidateProfile/>}/><Route path="/candidate/profile/edit" element={<CandidateProfileEdit/>}/></Route></Route><Route element={<Protected role="recruiter"/>}><Route element={<Shell/>}><Route path="/recruiter/setup/:step" element={<RecruiterSetup/>}/><Route path="/recruiter/dashboard" element={<RecruiterDashboard/>}/><Route path="/recruiter/offers/new" element={<RecruiterOfferEditor/>}/><Route path="/recruiter/offers/:id/edit" element={<RecruiterOfferEditor/>}/><Route path="/recruiter/offers/:id" element={<RecruiterOfferDetail/>}/><Route path="/recruiter/candidates" element={<RecruiterCandidates/>}/><Route path="/recruiter/candidates/:offerId" element={<RecruiterCandidates/>}/><Route path="/recruiter/matches" element={<RecruiterMatches/>}/><Route path="/recruiter/company" element={<RecruiterCompany/>}/></Route></Route><Route path="*" element={<Navigate to="/" replace/>}/></Routes>}

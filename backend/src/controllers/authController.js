@@ -5,7 +5,7 @@ const { generateToken } = require('../utils/token');
 
 function serializeUser(user) {
   return {
-    id: user._id,
+    id: String(user._id),
     email: user.email,
     role: user.role,
     status: user.status,

@@ -1,0 +1,7 @@
+import { useEffect,useState } from 'react';
+import { Link } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
+import { api } from '../lib/api';
+import { fullName } from '../lib/format';
+import { Avatar,Banner,Empty,Head,Icon,Spinner } from '../components/UI';
+export default function Conversations(){const {user}=useAuth();const [items,setItems]=useState([]);const [error,setError]=useState('');const [loading,setLoading]=useState(true);useEffect(()=>{let active=true;api.get('/conversations').then(r=>{if(active)setItems(r.conversations||[])}).catch(e=>{if(active)setError(e.message)}).finally(()=>{if(active)setLoading(false)});return()=>{active=false}},[]);return <div className="page"><Head title="Messages" back={user.role==='candidate'?'/candidate/matches':'/recruiter/matches'}/>{error&&<Banner kind="error">{error}</Banner>}{loading?<Spinner/>:items.length===0?<Empty title="Aucune conversation" icon="forum">Les conversations sont accessibles après un match accepté.</Empty>:<div className="line-list">{items.map(c=>{const other=(c.participantIds||[]).find(p=>String(p._id)!==String(user.id));const name=other?.role==='candidate'?fullName(other.candidateProfile):other?.recruiterProfile?.recruiterName||other?.email||'Interlocuteur';return <Link to={`/chat/${c._id}`} className="card tile" key={c._id}><Avatar name={name} size="lg"/><div className="tile-body"><strong>{name}</strong><small>Conversation privée · {new Date(c.lastMessageAt).toLocaleDateString('fr-FR')}</small></div><Icon name="chevron_right"/></Link>})}</div>}</div>}

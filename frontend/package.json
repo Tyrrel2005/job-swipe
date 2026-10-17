@@ -7,7 +7,8 @@
     "dev": "vite",
     "build": "vite build",
     "lint": "oxlint",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "test:api": "node scripts/e2e-api.mjs"
   },
   "dependencies": {
     "axios": "^1.20.0",

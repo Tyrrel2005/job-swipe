@@ -110,7 +110,10 @@ async function listJobOffers(request, response) {
       if (request.query.status) filters.status = request.query.status;
     }
 
-    if (request.query.city) filters.city = new RegExp(request.query.city, 'i');
+    if (request.query.city) {
+      const escapedCity = String(request.query.city).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      filters.city = new RegExp(escapedCity, 'i');
+    }
     if (request.query.contractType) filters.contractType = request.query.contractType;
     if (request.query.remoteMode) filters.remoteMode = request.query.remoteMode;
     if (request.query.skill) filters.requiredSkills = request.query.skill;
@@ -120,8 +123,16 @@ async function listJobOffers(request, response) {
       JobOffer.countDocuments(filters),
     ]);
 
+    // Champ de lecture additionnel pour afficher l'entreprise côté candidat.
+    // Le champ recruiterId et les permissions existantes ne sont pas modifiés.
+    const recruiters = await User.find({
+      _id: { $in: jobOffers.map((offer) => offer.recruiterId) },
+    }).select('recruiterProfile.companyName');
+    const names = new Map(recruiters.map((r) => [String(r._id), r.recruiterProfile?.companyName || '']));
+
     const serializedOffers = jobOffers.map((jobOffer) => {
       const serializedOffer = jobOffer.toObject();
+      serializedOffer.companyName = names.get(String(jobOffer.recruiterId)) || '';
 
       if (request.user.role === 'candidate') {
         serializedOffer.compatibilityScore = calculateMatchingScore(
@@ -165,6 +176,8 @@ async function getJobOffer(request, response) {
     }
 
     const serializedOffer = jobOffer.toObject();
+    const recruiter = await User.findById(jobOffer.recruiterId).select('recruiterProfile.companyName');
+    serializedOffer.companyName = recruiter?.recruiterProfile?.companyName || '';
     if (request.user.role === 'candidate') {
       serializedOffer.compatibilityScore = calculateMatchingScore(
         request.user.candidateProfile,
